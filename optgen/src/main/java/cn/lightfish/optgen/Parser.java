@@ -220,7 +220,7 @@ public class Parser {
                 return parseList();
             }
             case ASTERISK: {
-                return new AnyExpr(this.src);
+                return new AnyExpr(this.src());
             }
             case IDENT: {
                 return new NameExpr(scanner.literal());
@@ -400,7 +400,7 @@ public class Parser {
         if (scan() != Token.LPAREN) {
             panc("caller should have checked for left parenthesis");
         }
-        SourceLoc src = this.src;
+        SourceLoc src = this.src();
         Expr name = parseFuncName();
         if (name == null) {
             return null;
@@ -447,7 +447,7 @@ public class Parser {
 
     private SourceLoc peekNextSource() {
         scan();
-        SourceLoc src = this.src;
+        SourceLoc src = this.src();
         unscan();
         return src;
     }
@@ -456,7 +456,7 @@ public class Parser {
         if (scan() != Token.DOLLAR) {
             panc("caller should have checked for dollar");
         }
-        SourceLoc src = this.src;
+        SourceLoc src = this.src();
         if (!scanToken(Token.IDENT, "label")) {
             return null;
         }
@@ -534,7 +534,7 @@ public class Parser {
             return scanner.token();
         }
         for (;;){
-            this.saveSrc  = this.src;
+            this.saveSrc  = this.src();
             LineLocation lineLocation = scanner.lineLocation();
             this.src.line = lineLocation.line;
             this.src.pos = lineLocation.pos;
