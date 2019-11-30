@@ -164,9 +164,6 @@ public class Scanner implements Closeable {
     private int read() {
         int c = (int) reader.read();
         this._c = c;
-        if (end){
-            throw new IOException("io: read/write on closed pipe");
-        }
         if (c == -1||c == Character.MAX_VALUE) {
             this.end = true;
             return  -1;

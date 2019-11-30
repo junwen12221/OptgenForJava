@@ -130,7 +130,7 @@ public class TestDataReader {
                     break;
                 }
                 emit(line);
-                stringBuilder.append(line);
+                stringBuilder.append(line).append('\n');
             }
             data.input = stringBuilder.toString();
 
