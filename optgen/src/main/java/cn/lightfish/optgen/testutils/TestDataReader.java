@@ -57,19 +57,19 @@ public class TestDataReader {
                         if ("----".equals(line2)) {
                             break;
                         }
-                        buf.append(line);
-                        buf.append(line2);
+                        buf.append(line).append('\n');
+                        buf.append(line2).append('\n');
                         continue;
                     }
                 }
-                buf.append(line);
+                buf.append(line).append('\n');;
             }
         } else {
             while (true) {
                 if ("".equals(line.trim())) {
                     break;
                 }
-                buf.append(line);
+                buf.append(line).append('\n');;
 
                 if (!iterator.hasNext()) {
                     break;
@@ -154,11 +154,11 @@ public class TestDataReader {
             }
         };
         String path = "D:\\git\\OptgenForJava\\optgen\\src\\test\\resources\\testdata\\scanner";
-        runTest(fun, path);
+        runTest(path,fun);
 
     }
 
-    private static void runTest(Function<TestData, String> fun, String path) throws IOException {
+    public static void runTest(String path,Function<TestData, String> fun) throws IOException {
         TestDataReader testDataReader = new TestDataReader(path);
         while (testDataReader.next()) {
             TestData data = testDataReader.data();
@@ -166,8 +166,9 @@ public class TestDataReader {
             try {
                 actual = fun.apply(data);
             } catch (Exception e) {
-                Assert.fail(String.format("\npanic during %s:\n%s\n", data.getPos(), data.getInput()));
                 e.printStackTrace();
+                Assert.fail(String.format("\npanic during %s:\n%s\n", data.getPos(), data.getInput()));
+
             }
             if (testDataReader.rewrite != null) {
                 testDataReader.emit("----");

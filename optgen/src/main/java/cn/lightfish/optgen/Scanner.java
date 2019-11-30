@@ -1,8 +1,10 @@
 package cn.lightfish.optgen;
 
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 import lombok.SneakyThrows;
 
 import java.io.*;
+import java.nio.file.ClosedFileSystemException;
 
 public class Scanner implements Closeable {
     private PushbackReader reader;
@@ -13,6 +15,7 @@ public class Scanner implements Closeable {
     private int prev;
 
     private int _c;
+    private boolean end;
 
     public Scanner(Reader reader) {
         this.reader = new PushbackReader(reader);
@@ -28,135 +31,145 @@ public class Scanner implements Closeable {
 
     @SneakyThrows
     public Token scan() {
-        char c = read();
+        try {
+            int c = read();
 
-        if (Character.isSpaceChar(c)||Character.isWhitespace(c)) {
-            unread();
-            return scanWhitespace();
-        }
-        if (Character.isLetter(c) || c == '_') {
-            unread();
-            return scanIdentifier();
-        }
-        if (Character.isDigit(c)) {
-            unread();
-            return scanNumericLiteral();
-        }
-        switch (c) {
-            case (char)-1: {
-                token = Token.EOF;
-                literal = "";
-                break;
+            if (Character.isSpaceChar(c) || Character.isWhitespace(c)) {
+                unread();
+                return scanWhitespace();
             }
-            case '(': {
-                token = Token.LPAREN;
-                literal = "(";
-                break;
+            if (Character.isLetter(c) || c == '_') {
+                unread();
+                return scanIdentifier();
             }
-            case ')': {
-                token = Token.RPAREN;
-                literal = ")";
-                break;
+            if (Character.isDigit(c)) {
+                unread();
+                return scanNumericLiteral();
             }
-            case '[': {
-                token = Token.LBRACKET;
-                literal = "[";
-                break;
-            }
-            case ']': {
-                token = Token.RBRACKET;
-                literal = "]";
-                break;
-            }
-            case '{': {
-                token = Token.LBRACE;
-                literal = "{";
-                break;
-            }
-            case '}': {
-                token = Token.RBRACE;
-                literal = "}";
-                break;
-            }
-            case '$': {
-                token = Token.DOLLAR;
-                literal = "$";
-                break;
-            }
-            case ':': {
-                token = Token.COLON;
-                literal = ":";
-                break;
-            }
-            case '*': {
-                token = Token.ASTERISK;
-                literal = "*";
-                break;
-            }
-            case ',': {
-                token = Token.COMMA;
-                literal = ",";
-                break;
-            }
-            case '^': {
-                token = Token.CARET;
-                literal = "^";
-                break;
-            }
-            case '|': {
-                token = Token.PIPE;
-                literal = "|";
-                break;
-            }
-            case '&': {
-                token = Token.AMPERSAND;
-                literal = "&";
-                break;
-            }
-            case '=': {
-                if (read() == '>') {
-                    token = Token.ARROW;
-                    literal = "=>";
+            switch (c) {
+                case -1: {
+                    token = Token.EOF;
+                    literal = "";
                     break;
                 }
-                unread();
-                token = Token.EQUALS;
-                literal = "=";
-                break;
-            }
-            case '.': {
-                if (read() == '.') {
-                    if (read() == '.') {
-                        token = Token.ELLIPSES;
-                        literal = "...";
+                case '(': {
+                    token = Token.LPAREN;
+                    literal = "(";
+                    break;
+                }
+                case ')': {
+                    token = Token.RPAREN;
+                    literal = ")";
+                    break;
+                }
+                case '[': {
+                    token = Token.LBRACKET;
+                    literal = "[";
+                    break;
+                }
+                case ']': {
+                    token = Token.RBRACKET;
+                    literal = "]";
+                    break;
+                }
+                case '{': {
+                    token = Token.LBRACE;
+                    literal = "{";
+                    break;
+                }
+                case '}': {
+                    token = Token.RBRACE;
+                    literal = "}";
+                    break;
+                }
+                case '$': {
+                    token = Token.DOLLAR;
+                    literal = "$";
+                    break;
+                }
+                case ':': {
+                    token = Token.COLON;
+                    literal = ":";
+                    break;
+                }
+                case '*': {
+                    token = Token.ASTERISK;
+                    literal = "*";
+                    break;
+                }
+                case ',': {
+                    token = Token.COMMA;
+                    literal = ",";
+                    break;
+                }
+                case '^': {
+                    token = Token.CARET;
+                    literal = "^";
+                    break;
+                }
+                case '|': {
+                    token = Token.PIPE;
+                    literal = "|";
+                    break;
+                }
+                case '&': {
+                    token = Token.AMPERSAND;
+                    literal = "&";
+                    break;
+                }
+                case '=': {
+                    if (read() == '>') {
+                        token = Token.ARROW;
+                        literal = "=>";
                         break;
                     }
+                    unread();
+                    token = Token.EQUALS;
+                    literal = "=";
+                    break;
                 }
-                token = Token.ILLEGAL;
-                literal = ".";
-                break;
+                case '.': {
+                    if (read() == '.') {
+                        if (read() == '.') {
+                            token = Token.ELLIPSES;
+                            literal = "...";
+                            break;
+                        }
+                    }
+                    token = Token.ILLEGAL;
+                    literal = ".";
+                    break;
+                }
+                case '"': {
+                    unread();
+                    return scanStringLiteral();
+                }
+                case '#': {
+                    unread();
+                    return scanComment();
+                }
+                default:
+                    token = Token.ILLEGAL;
+                    literal = String.valueOf(c);
             }
-            case '"': {
-                unread();
-                return scanStringLiteral();
-            }
-            case '#': {
-                unread();
-                return scanComment();
-            }
-            default:
-                token = Token.ILLEGAL;
-                literal = String.valueOf(c);
+            return token;
+        }catch (Exception e){
+            token = Token.ERROR;
+            literal = "io: read/write on closed pipe";
+            return token;
         }
-        return token;
     }
 
     @SneakyThrows
-    private char read() {
-        char c = (char) reader.read();
+    private int read() {
+        int c = (int) reader.read();
         this._c = c;
-        if (c == -1) {
-            return(char) -1;
+        if (end){
+            throw new IOException("io: read/write on closed pipe");
+        }
+        if (c == -1||c == Character.MAX_VALUE) {
+            this.end = true;
+            return  -1;
         }
         prev = pos;
         if (c == '\n') {
@@ -173,9 +186,6 @@ public class Scanner implements Closeable {
         reader.unread(this._c);
         token = Token.ILLEGAL;
         literal = "";
-        if (prev == -1) {
-            throw new RuntimeException("unread cannot be called twice in succession");
-        }
         if (pos == 0) {
             line--;
         }
