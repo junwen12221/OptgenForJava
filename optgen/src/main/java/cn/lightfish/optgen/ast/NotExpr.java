@@ -38,6 +38,11 @@ public class NotExpr extends Expr {
     }
 
     @Override
+    public SourceLoc source() {
+        return src;
+    }
+
+    @Override
     public DataType inferredType() {
         return type;
     }

@@ -70,8 +70,12 @@ public class Scanner implements Closeable {
                 index++;
                 return 0;
             }
-            error = "read/write on closed pipe";
-            return -1;
+            if (count == Integer.MAX_VALUE) {
+                error = "read/write on closed pipe";
+                return -1;
+            }else {
+                return 0;
+            }
         }
 
         public void unread() {
@@ -82,7 +86,6 @@ public class Scanner implements Closeable {
 
     @SneakyThrows
     public Token scan() {
-        try {
             int c = read();
 
             if (Character.isSpaceChar(c) || Character.isWhitespace(c)) {
@@ -100,7 +103,7 @@ public class Scanner implements Closeable {
             switch (c) {
                 case -1: {
                     token = Token.ERROR;
-                    literal = "io: read/write on closed pipe";
+                    literal = error();
                     break;
                 }
                 case 0: {
@@ -209,11 +212,7 @@ public class Scanner implements Closeable {
                     literal = String.valueOf(c);
             }
             return token;
-        } catch (Exception e) {
-            token = Token.ERROR;
-            literal = "io: read/write on closed pipe";
-            return token;
-        }
+
     }
 
     @SneakyThrows
@@ -222,6 +221,9 @@ public class Scanner implements Closeable {
             return -1;
         }
         int c = (int) reader.read();
+        if (error()!=null){
+            return -1;
+        }
         if (c == -1 || c == Character.MAX_VALUE) {
             return -1;
         }

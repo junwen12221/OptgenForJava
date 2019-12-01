@@ -54,6 +54,11 @@ public class FuncExpr extends Expr {
     }
 
     @Override
+    public SourceLoc source() {
+        return sourceLoc;
+    }
+
+    @Override
     public void format(Appendable buff, int level) {
         format(this, buff, level);
     }

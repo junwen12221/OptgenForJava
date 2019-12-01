@@ -121,7 +121,12 @@ public abstract class Expr {
                         buff.append(name);
                         buff.append('=');
                     }
-                    e.child(i).format(buff, level);
+                    Expr child = e.child(i);
+                    try {
+                        child.format(buff, level);
+                    }catch (Exception e1){
+                        e1.printStackTrace();
+                    }
                     buff.append('\n');
                 }
                 DataType typ = e.inferredType();

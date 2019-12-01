@@ -5,6 +5,11 @@ import cn.lightfish.optgen.Operator;
 import cn.lightfish.optgen.SourceLoc;
 
 public class RefExpr extends Expr {
+    @Override
+    public SourceLoc source() {
+        return sourceLoc;
+    }
+
     private final SourceLoc sourceLoc;
     StringExpr label;
     DataType type;

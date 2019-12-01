@@ -249,11 +249,11 @@ public class Parser {
 
     private void addExpectedTokenErr(String desc) {
         if (scanner.token() == Token.EOF) {
-            addError(MessageFormat.format("expected {0},found EOF", desc));
+            addError(MessageFormat.format(" expected {0}, found EOF", desc));
         } else {
-            addError("expected " +
+            addError(" expected " +
                     desc+
-                    ",found '"+
+                    ", found '"+
                     scanner.literal()+"'"
                     );
         }
@@ -294,7 +294,7 @@ public class Parser {
         if (match == null) {
             return null;
         }
-        if (scanToken(Token.ARROW, "'=>'")) {
+        if (!scanToken(Token.ARROW, "'=>'")) {
             return null;
         }
         Expr replace = parseReplace();
@@ -508,7 +508,7 @@ public class Parser {
     private Expr parseNames() {
         NamesExpr names = new NamesExpr();
         for (; ; ) {
-            if (scanToken(IDENT, "name")) {
+            if (!scanToken(IDENT, "name")) {
                 return null;
             }
             names.append(new NameExpr(scanner.literal()));

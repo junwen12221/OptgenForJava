@@ -6,9 +6,7 @@ import cn.lightfish.optgen.SourceLoc;
 
 public class RuleExpr extends Expr {
     private final SourceLoc sourceLoc;
-    private final StringExpr sliceExpr;
     CommentsExpr comments;
-    private final TagsExpr tagExprs;
     StringExpr name;
     TagsExpr tags;
     FuncExpr match;
@@ -17,12 +15,12 @@ public class RuleExpr extends Expr {
 
 
 
-    public RuleExpr(SourceLoc src, StringExpr sliceExpr, CommentsExpr comments, TagsExpr tagExprs, FuncExpr match, Expr replace) {
+    public RuleExpr(SourceLoc src, StringExpr name, CommentsExpr comments, TagsExpr tagExprs, FuncExpr match, Expr replace) {
         super(Operator.RuleOp);
         this.sourceLoc = src;
-        this.sliceExpr = sliceExpr;
+        this.name = name;
         this.comments = comments;
-        this.tagExprs = tagExprs;
+        this.tags = tagExprs;
         this.match = match;
         this.replace = replace;
     }
@@ -60,5 +58,10 @@ public class RuleExpr extends Expr {
     @Override
     public DataType inferredType() {
         return DataType.AnyDataType;
+    }
+
+    @Override
+    public SourceLoc source() {
+        return sourceLoc;
     }
 }

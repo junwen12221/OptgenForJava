@@ -31,9 +31,9 @@ public class ListExpr extends Expr {
 
     @Override
     public String childName(int n) {
-        if (n == 1){{
-            return "Item";
-        }}
+        if (n == 0) {
+            return "Items";
+        }
         return "";
     }
 
@@ -44,5 +44,10 @@ public class ListExpr extends Expr {
 
     public void append(Expr item) {
         items.append(item);
+    }
+
+    @Override
+    public SourceLoc source() {
+        return sourceLoc;
     }
 }
