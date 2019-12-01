@@ -33,7 +33,9 @@ public class TestParser {
                         Map<String, String> map = Collections.singletonMap(name, testData.getInput());
 
                         Parser fromFileName = Parser.createFromText(map);
-                        fromFileName.setFileResolver(s -> testData.getInput());
+                        fromFileName.setFileResolver(s -> {
+                            return testData.getInput();
+                        });
                         RootExpr parse = fromFileName.parse();
                         if (parse!=null) {
                             return parse.toString() + "\n";

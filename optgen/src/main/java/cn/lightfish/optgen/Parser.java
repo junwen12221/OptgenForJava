@@ -390,7 +390,7 @@ public class Parser {
             panc("caller should have checked for dollar");
         }
         SourceLoc src = src();
-        if (scanToken(Token.IDENT, "label")) {
+        if (!scanToken(Token.IDENT, "label")) {
             return null;
         }
         return new RefExpr(src, new StringExpr(scanner.literal()));
