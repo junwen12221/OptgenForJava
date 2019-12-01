@@ -13,6 +13,7 @@ public class Scanner implements Closeable {
     private int pos;
     private int prev;
 
+
     public Scanner(String input, int count) {
         this.reader = new MyReader(input, count);
     }
@@ -29,12 +30,16 @@ public class Scanner implements Closeable {
         return new LineLocation(line, pos, prev);
     }
 
+    public String error() {
+        return reader.getError();
+    }
+
 
     static class MyReader {
         String input;
         int index = 0;
         int count;
-
+        private String error;
         public MyReader(String input) {
             this.input = input;
             this.count = Integer.MAX_VALUE;
@@ -54,6 +59,9 @@ public class Scanner implements Closeable {
             return inner();
         }
 
+        public String getError() {
+            return error;
+        }
         private int inner() {
             if (index < input.length()) {
                 return input.charAt(index++);
@@ -62,6 +70,7 @@ public class Scanner implements Closeable {
                 index++;
                 return 0;
             }
+            error = "read/write on closed pipe";
             return -1;
         }
 
@@ -209,11 +218,15 @@ public class Scanner implements Closeable {
 
     @SneakyThrows
     private int read() {
+        if (error()!=null){
+            return -1;
+        }
         int c = (int) reader.read();
         if (c == -1 || c == Character.MAX_VALUE) {
             return -1;
         }
         if (c == 0) {
+
             return 0;
         }
         prev = pos;

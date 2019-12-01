@@ -33,14 +33,17 @@ public class TestParser {
                         Map<String, String> map = Collections.singletonMap(name, testData.getInput());
 
                         Parser fromFileName = Parser.createFromText(map);
-                        fromFileName.setFileResolver(new Function<String, String>() {
-                            @Override
-                            public String apply(String s) {
-                                return testData.getInput();
-                            }
-                        });
+                        fromFileName.setFileResolver(s -> testData.getInput());
                         RootExpr parse = fromFileName.parse();
-                        return parse.toString()+"\n";
+                        if (parse!=null) {
+                            return parse.toString() + "\n";
+                        }else {
+                            StringBuilder actual = new StringBuilder();
+                            for (String error : fromFileName.errors()) {
+                                actual.append(error).append('\n');
+                            }
+                            return actual.toString();
+                        }
                     }
                 });
     }

@@ -30,6 +30,11 @@ public class Parser {
     private boolean unscanned;
     private SourceLoc saveSrc;
 
+
+    public List<String> errors() {
+        return errors;
+    }
+
     private Parser(List<String> files, Function<String, String> resolver) {
         this.files = files;
         this.resolver = resolver;
@@ -57,12 +62,15 @@ public class Parser {
     }
 
     public SourceLoc src() {
-        return new SourceLoc(src.file, src.pos, src.line);
+        return new SourceLoc(src.file,  src.line,src.pos);
     }
 
     public RootExpr parse() {
         RootExpr root = parseRoot();
         closeScanner();
+        if (!errors.isEmpty()){
+            return null;
+        }
         return root;
     }
 
@@ -101,7 +109,7 @@ public class Parser {
             }
         }
         for (; ; ) {
-            CommentsExpr comments=new CommentsExpr();
+            CommentsExpr comments = null;
             TagsExpr tags = new TagsExpr();
 
             this.comments = new CommentsExpr();
@@ -133,7 +141,6 @@ public class Parser {
                         rootExpr.appendRule(rule);
                         break;
                     }
-                    throw new UnsupportedOperationException();
                 }
                 case IDENT: {
                     if (comments == null) {
@@ -157,6 +164,7 @@ public class Parser {
                 default:
                     addExpectedTokenErr("define statement or rule");
                     tryRecover();
+                    break;
             }
         }
     }
@@ -243,7 +251,11 @@ public class Parser {
         if (scanner.token() == Token.EOF) {
             addError(MessageFormat.format("expected {0},found EOF", desc));
         } else {
-            addError(MessageFormat.format("expected {0},found {1}", desc, scanner.literal()));
+            addError("expected " +
+                    desc+
+                    ",found '"+
+                    scanner.literal()+"'"
+                    );
         }
     }
 
@@ -521,7 +533,7 @@ public class Parser {
     }
 
     private SourceLoc saveSrc() {
-        return new SourceLoc(this.saveSrc.file,this.saveSrc.pos,this.saveSrc.line);
+        return new SourceLoc(this.saveSrc.file,this.saveSrc.line,this.saveSrc.pos);
     }
 
     private Token scan() {
@@ -553,7 +565,7 @@ public class Parser {
                 }
                 case ERROR:{
                     addError(scanner.literal());
-                    return ERROR;
+                    return EOF;
                 }
                 case COMMENT:{
                     if (comments!=null){

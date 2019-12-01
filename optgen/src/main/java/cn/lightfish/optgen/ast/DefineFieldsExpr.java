@@ -12,7 +12,7 @@ public class DefineFieldsExpr extends Expr {
 
 
     public DefineFieldsExpr() {
-        super(Operator.DefineFieldOp);
+        super(Operator.DefineFieldsOp);
     }
 
     @Override

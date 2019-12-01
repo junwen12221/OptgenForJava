@@ -8,12 +8,17 @@ import java.nio.file.Paths;
 import java.text.MessageFormat;
 
 @Data
-@AllArgsConstructor
+
 public class SourceLoc {
     String file;
     int line;
     int pos;
 
+    public SourceLoc(String file, int line, int pos) {
+        this.file = file;
+        this.line = line;
+        this.pos = pos;
+    }
 
     @Override
     public String toString() {

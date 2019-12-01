@@ -40,7 +40,7 @@ public class DefineFieldExpr extends Expr {
     @Override
     public String childName(int n) {
         switch (n){
-            case 0:return "Comment";
+            case 0:return "Comments";
             case 1:return "Name";
             case 2:return "Type";
         }
