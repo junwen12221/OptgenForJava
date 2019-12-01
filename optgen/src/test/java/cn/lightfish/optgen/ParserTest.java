@@ -36,7 +36,7 @@ public class ParserTest {
 
     private static void scan() throws IOException {
         Path path = Paths.get("D:\\git\\OptgenForJava\\optgen\\src\\test\\resources\\testdata\\scanner");
-        Scanner scanner = new Scanner(new StringReader(new String( Files.readAllBytes(path))));
+        Scanner scanner = new Scanner(new String( Files.readAllBytes(path)));
         for (;;){
             Token scan = scanner.scan();
             if (scan == Token.EOF){

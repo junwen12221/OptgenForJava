@@ -132,7 +132,7 @@ public class TestDataReader {
                 emit(line);
                 stringBuilder.append(line).append('\n');
             }
-            data.input = stringBuilder.toString();
+            data.input = stringBuilder.toString().trim();
 
             if (separator) {
                 readExpected();

@@ -35,14 +35,13 @@ public class TestScanner {
                             }
                             count = Integer.parseInt( cmdArg.getVals().get(0));
                         }
-                        StringReader bufferedReader = null;
-                        bufferedReader  = new StringReader(testData.getInput());
+
 
                         Scanner scanner;
                         if (count!=-1){
-                            scanner =  new Scanner(new ErrorReader(bufferedReader,count));
+                            scanner =  new Scanner(testData.getInput(),count);
                         }else {
-                            scanner = new Scanner(bufferedReader);
+                            scanner = new Scanner(testData.getInput());
                         }
 
                         StringBuilder buffer = new StringBuilder();
@@ -80,7 +79,7 @@ public class TestScanner {
         public int read() throws IOException {
             count--;
             if (count <=0){
-                return -1;
+               return -1;
             }
             return r.read();
         }

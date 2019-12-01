@@ -33,10 +33,10 @@ public class TestParser {
                         Map<String, String> map = Collections.singletonMap(name, testData.getInput());
 
                         Parser fromFileName = Parser.createFromText(map);
-                        fromFileName.setFileResolver(new Function<String, Reader>() {
+                        fromFileName.setFileResolver(new Function<String, String>() {
                             @Override
-                            public Reader apply(String s) {
-                                return new StringReader( testData.getInput());
+                            public String apply(String s) {
+                                return testData.getInput();
                             }
                         });
                         RootExpr parse = fromFileName.parse();

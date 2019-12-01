@@ -25,12 +25,12 @@ public class Parser {
     private Scanner scanner;
     private final List<String> errors = new ArrayList<>();
     private CommentsExpr comments;
-    private Function<String, Reader> resolver;
-    private Reader reader;
+    private Function<String, String> resolver;
+    private String reader;
     private boolean unscanned;
     private SourceLoc saveSrc;
 
-    private Parser(List<String> files, Function<String, Reader> resolver) {
+    private Parser(List<String> files, Function<String, String> resolver) {
         this.files = files;
         this.resolver = resolver;
     }
@@ -38,13 +38,13 @@ public class Parser {
     public static Parser createFromText(Map<String,String> list){
         List<String> key = new ArrayList<>(list.keySet());
         return new Parser(key, (s) -> {
-            return new StringReader(list.get(s));
+            return list.get(s);
         });
     }
     public static Parser createFromFileName(List<String> list){
         return new Parser(list, (s) -> {
             try {
-                return Files.newBufferedReader(Paths.get(s));
+                return new String( Files.readAllBytes(Paths.get(s)));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -52,7 +52,7 @@ public class Parser {
     }
 
 
-    public void setFileResolver(Function<String, Reader> resolver) {
+    public void setFileResolver(Function<String, String> resolver) {
         this.resolver = resolver;
     }
 

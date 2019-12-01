@@ -1,24 +1,24 @@
 package cn.lightfish.optgen;
 
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 import lombok.SneakyThrows;
 
-import java.io.*;
-import java.nio.file.ClosedFileSystemException;
+import java.io.Closeable;
+import java.io.IOException;
 
 public class Scanner implements Closeable {
-    private PushbackReader reader;
+    private MyReader reader;
     private Token token;
     private String literal;
     private int line;
     private int pos;
     private int prev;
 
-    private int _c;
-    private boolean end;
+    public Scanner(String input, int count) {
+        this.reader = new MyReader(input, count);
+    }
 
-    public Scanner(Reader reader) {
-        this.reader = new PushbackReader(reader);
+    public Scanner(String input) {
+        this.reader = new MyReader(input);
     }
 
     public Token token() {
@@ -27,6 +27,48 @@ public class Scanner implements Closeable {
 
     public LineLocation lineLocation() {
         return new LineLocation(line, pos, prev);
+    }
+
+
+    static class MyReader {
+        String input;
+        int index = 0;
+        int count;
+
+        public MyReader(String input) {
+            this.input = input;
+            this.count = Integer.MAX_VALUE;
+        }
+
+        public MyReader(String input, int count) {
+            this.input = input;
+            this.count = count;
+        }
+
+
+        public int read() {
+            count--;
+            if (count <= 0) {
+                return -1;
+            }
+            return inner();
+        }
+
+        private int inner() {
+            if (index < input.length()) {
+                return input.charAt(index++);
+            }
+            if (index == input.length()) {
+                index++;
+                return 0;
+            }
+            return -1;
+        }
+
+        public void unread() {
+            ++count;
+            --index;
+        }
     }
 
     @SneakyThrows
@@ -48,6 +90,11 @@ public class Scanner implements Closeable {
             }
             switch (c) {
                 case -1: {
+                    token = Token.ERROR;
+                    literal = "io: read/write on closed pipe";
+                    break;
+                }
+                case 0: {
                     token = Token.EOF;
                     literal = "";
                     break;
@@ -153,7 +200,7 @@ public class Scanner implements Closeable {
                     literal = String.valueOf(c);
             }
             return token;
-        }catch (Exception e){
+        } catch (Exception e) {
             token = Token.ERROR;
             literal = "io: read/write on closed pipe";
             return token;
@@ -163,10 +210,11 @@ public class Scanner implements Closeable {
     @SneakyThrows
     private int read() {
         int c = (int) reader.read();
-        this._c = c;
-        if (c == -1||c == Character.MAX_VALUE) {
-            this.end = true;
-            return  -1;
+        if (c == -1 || c == Character.MAX_VALUE) {
+            return -1;
+        }
+        if (c == 0) {
+            return 0;
         }
         prev = pos;
         if (c == '\n') {
@@ -180,7 +228,7 @@ public class Scanner implements Closeable {
 
     @SneakyThrows
     private void unread() {
-        reader.unread(this._c);
+        reader.unread();
         token = Token.ILLEGAL;
         literal = "";
         if (pos == 0) {
@@ -196,13 +244,13 @@ public class Scanner implements Closeable {
         int c;
         do {
             c = read();
-            if (c == -1||c == '\n') {
+            if (c == 0 || c == -1 || c == '\n') {
                 unread();
                 token = Token.ILLEGAL;
                 break;
             }
-            stringBuilder.append((char)c);
-            if (c == '"'){
+            stringBuilder.append((char) c);
+            if (c == '"') {
                 token = Token.STRING;
                 break;
             }
@@ -213,14 +261,14 @@ public class Scanner implements Closeable {
 
     private Token scanComment() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append((char)read());
+        stringBuilder.append((char) read());
         int c;
         do {
             c = read();
-            if (c == -1||c == '\n') {
+            if (c == 0 || c == -1 || c == '\n') {
                 break;
             }
-            stringBuilder.append((char)c);
+            stringBuilder.append((char) c);
         } while (true);
         unread();
         token = Token.COMMENT;
@@ -230,14 +278,14 @@ public class Scanner implements Closeable {
 
     private Token scanIdentifier() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append((char)read());
+        stringBuilder.append((char) read());
         int c;
         do {
             c = read();
-            if (!Character.isLetter(c)&&!Character.isDigit(c)&&c!='_') {
+            if (!Character.isLetter(c) && !Character.isDigit(c) && c != '_') {
                 break;
             }
-            stringBuilder.append((char)c);
+            stringBuilder.append((char) c);
         } while (true);
         unread();
         token = Token.IDENT;
@@ -247,14 +295,14 @@ public class Scanner implements Closeable {
 
     private Token scanNumericLiteral() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append((char)read());
+        stringBuilder.append((char) read());
         int c;
         do {
             c = read();
             if (!Character.isDigit(c)) {
                 break;
             }
-            stringBuilder.append((char)c);
+            stringBuilder.append((char) c);
         } while (true);
         unread();
         token = Token.NUMBER;
@@ -264,14 +312,14 @@ public class Scanner implements Closeable {
 
     private Token scanWhitespace() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append((char)read());
+        stringBuilder.append((char) read());
         int c;
         do {
             c = read();
-            if (!(Character.isSpaceChar(c)||Character.isWhitespace(c))) {
+            if (!(Character.isSpaceChar(c) || Character.isWhitespace(c))) {
                 break;
             }
-            stringBuilder.append((char)c);
+            stringBuilder.append((char) c);
         } while (true);
         unread();
         token = Token.WHITESPACE;
@@ -285,6 +333,6 @@ public class Scanner implements Closeable {
 
     @Override
     public void close() throws IOException {
-        this.reader.close();
+
     }
 }
