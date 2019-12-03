@@ -3,7 +3,9 @@ package cn.lightfish.optgen.ast;
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
 import cn.lightfish.optgen.SourceLoc;
+import lombok.EqualsAndHashCode;
 
+@EqualsAndHashCode
 public class StringExpr extends Expr{
 
 
@@ -22,6 +24,11 @@ public class StringExpr extends Expr{
     @Override
     public DataType inferredType() {
         return DataType.StringDataType;
+    }
+
+    @Override
+    public Expr visit(VisitFunc visit) {
+        return this;
     }
 
 }

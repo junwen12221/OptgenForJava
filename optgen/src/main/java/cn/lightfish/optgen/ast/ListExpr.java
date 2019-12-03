@@ -42,6 +42,11 @@ public class ListExpr extends Expr {
         return type;
     }
 
+    @Override
+    public Expr visit(VisitFunc visit) {
+        return this;
+    }
+
     public void append(Expr item) {
         items.append(item);
     }

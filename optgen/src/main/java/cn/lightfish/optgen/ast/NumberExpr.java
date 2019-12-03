@@ -34,6 +34,11 @@ public class NumberExpr extends Expr {
     }
 
     @Override
+    public Expr visit(VisitFunc visit) {
+        return this;
+    }
+
+    @Override
     public Long value() {
         return number;
     }

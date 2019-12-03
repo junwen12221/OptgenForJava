@@ -4,6 +4,8 @@ import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
 import cn.lightfish.optgen.SourceLoc;
 
+import java.util.List;
+
 public class CommentExpr extends Expr{
     String comment;
     public CommentExpr(String literal) {
@@ -40,5 +42,10 @@ public class CommentExpr extends Expr{
     @Override
     public void format(Appendable buff, int level) {
         format(this,buff,level);
+    }
+
+    @Override
+    public Expr visit(VisitFunc visit) {
+        return this;
     }
 }

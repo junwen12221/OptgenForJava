@@ -3,7 +3,11 @@ package cn.lightfish.optgen.ast;
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
 import cn.lightfish.optgen.SourceLoc;
+import lombok.Data;
 
+import java.util.List;
+
+@Data
 public class AnyExpr extends Expr {
 
     private SourceLoc sourceLoc;
@@ -38,5 +42,10 @@ public class AnyExpr extends Expr {
     @Override
     public void format(Appendable buff, int level) {
         format(this, buff, level);
+    }
+
+    @Override
+    public Expr visit(VisitFunc visit) {
+        return this;
     }
 }

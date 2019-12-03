@@ -3,7 +3,9 @@ package cn.lightfish.optgen.ast;
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
 import cn.lightfish.optgen.SourceLoc;
+import lombok.Data;
 
+@Data
 public class RefExpr extends Expr {
     @Override
     public SourceLoc source() {
@@ -45,4 +47,10 @@ public class RefExpr extends Expr {
     public DataType inferredType() {
         return type;
     }
+
+    @Override
+    public Expr visit(VisitFunc visit) {
+        return this;
+    }
 }
+

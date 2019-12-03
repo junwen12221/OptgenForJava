@@ -37,6 +37,17 @@ public class DefineFieldsExpr extends Expr {
         return DataType.AnyDataType;
     }
 
+    @Override
+    public Expr visit(VisitFunc visit) {
+        List<Expr> exprs = visitChildren(this, visit);
+        if (exprs != null) {
+            DefineFieldsExpr commentsExpr = new DefineFieldsExpr();
+            commentsExpr.defineFieldsExprs.addAll( (List)exprs);
+            return commentsExpr;
+        }
+        return this;
+    }
+
     public void append(DefineFieldExpr defineField) {
         defineFieldsExprs.add(defineField);
     }

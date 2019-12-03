@@ -38,6 +38,17 @@ public class CommentsExpr extends Expr{
         format(this,buff,level);
     }
 
+    @Override
+    public Expr visit(VisitFunc visit) {
+        List<Expr> exprs = visitChildren(this, visit);
+        if (exprs != null) {
+            CommentsExpr commentsExpr = new CommentsExpr();
+            commentsExpr.commentExprs.addAll( (List)exprs);
+            return commentsExpr;
+        }
+        return this;
+    }
+
     public void append(CommentExpr commentExpr) {
         commentExprs.add(commentExpr);
     }

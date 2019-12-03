@@ -3,7 +3,10 @@ package cn.lightfish.optgen.ast;
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
 import cn.lightfish.optgen.SourceLoc;
+import lombok.Data;
+import lombok.Getter;
 
+@Data
 public class NotExpr extends Expr {
     Expr input;
     SourceLoc src;
@@ -45,5 +48,10 @@ public class NotExpr extends Expr {
     @Override
     public DataType inferredType() {
         return type;
+    }
+
+    @Override
+    public Expr visit(VisitFunc visit) {
+        return this;
     }
 }

@@ -21,4 +21,9 @@ public class ListAnyExpr extends Expr {
     public DataType inferredType() {
         return DataType.AnyDataType;
     }
+
+    @Override
+    public Expr visit(VisitFunc visit) {
+        return this;
+    }
 }

@@ -40,6 +40,7 @@ public class Scanner implements Closeable {
         int index = 0;
         int count;
         private String error;
+
         public MyReader(String input) {
             this.input = input;
             this.count = Integer.MAX_VALUE;
@@ -54,6 +55,7 @@ public class Scanner implements Closeable {
         public int read() {
             count--;
             if (count <= 0) {
+                error = "io: read/write on closed pipe";
                 return -1;
             }
             return inner();
@@ -62,6 +64,7 @@ public class Scanner implements Closeable {
         public String getError() {
             return error;
         }
+
         private int inner() {
             if (index < input.length()) {
                 return input.charAt(index++);
@@ -70,10 +73,7 @@ public class Scanner implements Closeable {
                 index++;
                 return 0;
             }
-            if (count == Integer.MAX_VALUE) {
-                error = "read/write on closed pipe";
-                return -1;
-            }else {
+          else {
                 return 0;
             }
         }
@@ -86,142 +86,142 @@ public class Scanner implements Closeable {
 
     @SneakyThrows
     public Token scan() {
-            int c = read();
+        int c = read();
 
-            if (Character.isSpaceChar(c) || Character.isWhitespace(c)) {
-                unread();
-                return scanWhitespace();
+        if (Character.isSpaceChar(c) || Character.isWhitespace(c)) {
+            unread();
+            return scanWhitespace();
+        }
+        if (Character.isLetter(c) || c == '_') {
+            unread();
+            return scanIdentifier();
+        }
+        if (Character.isDigit(c)) {
+            unread();
+            return scanNumericLiteral();
+        }
+        switch (c) {
+            case -1: {
+                token = Token.ERROR;
+                literal = error();
+                break;
             }
-            if (Character.isLetter(c) || c == '_') {
-                unread();
-                return scanIdentifier();
+            case 0: {
+                token = Token.EOF;
+                literal = "";
+                break;
             }
-            if (Character.isDigit(c)) {
-                unread();
-                return scanNumericLiteral();
+            case '(': {
+                token = Token.LPAREN;
+                literal = "(";
+                break;
             }
-            switch (c) {
-                case -1: {
-                    token = Token.ERROR;
-                    literal = error();
+            case ')': {
+                token = Token.RPAREN;
+                literal = ")";
+                break;
+            }
+            case '[': {
+                token = Token.LBRACKET;
+                literal = "[";
+                break;
+            }
+            case ']': {
+                token = Token.RBRACKET;
+                literal = "]";
+                break;
+            }
+            case '{': {
+                token = Token.LBRACE;
+                literal = "{";
+                break;
+            }
+            case '}': {
+                token = Token.RBRACE;
+                literal = "}";
+                break;
+            }
+            case '$': {
+                token = Token.DOLLAR;
+                literal = "$";
+                break;
+            }
+            case ':': {
+                token = Token.COLON;
+                literal = ":";
+                break;
+            }
+            case '*': {
+                token = Token.ASTERISK;
+                literal = "*";
+                break;
+            }
+            case ',': {
+                token = Token.COMMA;
+                literal = ",";
+                break;
+            }
+            case '^': {
+                token = Token.CARET;
+                literal = "^";
+                break;
+            }
+            case '|': {
+                token = Token.PIPE;
+                literal = "|";
+                break;
+            }
+            case '&': {
+                token = Token.AMPERSAND;
+                literal = "&";
+                break;
+            }
+            case '=': {
+                if (read() == '>') {
+                    token = Token.ARROW;
+                    literal = "=>";
                     break;
                 }
-                case 0: {
-                    token = Token.EOF;
-                    literal = "";
-                    break;
-                }
-                case '(': {
-                    token = Token.LPAREN;
-                    literal = "(";
-                    break;
-                }
-                case ')': {
-                    token = Token.RPAREN;
-                    literal = ")";
-                    break;
-                }
-                case '[': {
-                    token = Token.LBRACKET;
-                    literal = "[";
-                    break;
-                }
-                case ']': {
-                    token = Token.RBRACKET;
-                    literal = "]";
-                    break;
-                }
-                case '{': {
-                    token = Token.LBRACE;
-                    literal = "{";
-                    break;
-                }
-                case '}': {
-                    token = Token.RBRACE;
-                    literal = "}";
-                    break;
-                }
-                case '$': {
-                    token = Token.DOLLAR;
-                    literal = "$";
-                    break;
-                }
-                case ':': {
-                    token = Token.COLON;
-                    literal = ":";
-                    break;
-                }
-                case '*': {
-                    token = Token.ASTERISK;
-                    literal = "*";
-                    break;
-                }
-                case ',': {
-                    token = Token.COMMA;
-                    literal = ",";
-                    break;
-                }
-                case '^': {
-                    token = Token.CARET;
-                    literal = "^";
-                    break;
-                }
-                case '|': {
-                    token = Token.PIPE;
-                    literal = "|";
-                    break;
-                }
-                case '&': {
-                    token = Token.AMPERSAND;
-                    literal = "&";
-                    break;
-                }
-                case '=': {
-                    if (read() == '>') {
-                        token = Token.ARROW;
-                        literal = "=>";
+                unread();
+                token = Token.EQUALS;
+                literal = "=";
+                break;
+            }
+            case '.': {
+                if (read() == '.') {
+                    if (read() == '.') {
+                        token = Token.ELLIPSES;
+                        literal = "...";
                         break;
                     }
-                    unread();
-                    token = Token.EQUALS;
-                    literal = "=";
-                    break;
                 }
-                case '.': {
-                    if (read() == '.') {
-                        if (read() == '.') {
-                            token = Token.ELLIPSES;
-                            literal = "...";
-                            break;
-                        }
-                    }
-                    token = Token.ILLEGAL;
-                    literal = ".";
-                    break;
-                }
-                case '"': {
-                    unread();
-                    return scanStringLiteral();
-                }
-                case '#': {
-                    unread();
-                    return scanComment();
-                }
-                default:
-                    token = Token.ILLEGAL;
-                    literal = String.valueOf(c);
+                token = Token.ILLEGAL;
+                literal = ".";
+                break;
             }
-            return token;
+            case '"': {
+                unread();
+                return scanStringLiteral();
+            }
+            case '#': {
+                unread();
+                return scanComment();
+            }
+            default:
+                token = Token.ILLEGAL;
+                literal = String.valueOf(c);
+        }
+        return token;
 
     }
 
     @SneakyThrows
     private int read() {
-        if (error()!=null){
+        if (error() != null) {
             return -1;
         }
         int c = (int) reader.read();
-        if (error()!=null){
+        if (error() != null) {
             return -1;
         }
         if (c == -1 || c == Character.MAX_VALUE) {

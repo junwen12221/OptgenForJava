@@ -4,8 +4,6 @@ import cn.lightfish.optgen.ast.*;
 import lombok.SneakyThrows;
 
 import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.MessageFormat;
@@ -13,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static cn.lightfish.optgen.Token.*;
 
@@ -42,9 +39,7 @@ public class Parser {
 
     public static Parser createFromText(Map<String,String> list){
         List<String> key = new ArrayList<>(list.keySet());
-        return new Parser(key, (s) -> {
-            return list.get(s);
-        });
+        return new Parser(key, (s) -> list.get(s));
     }
     public static Parser createFromFileName(List<String> list){
         return new Parser(list, (s) -> {
@@ -55,7 +50,6 @@ public class Parser {
             }
         });
     }
-
 
     public void setFileResolver(Function<String, String> resolver) {
         this.resolver = resolver;
@@ -307,7 +301,7 @@ public class Parser {
             newTags.append(tags.child(i));
         }
 
-        return new RuleExpr(src, new StringExpr(tags.child(0).value()), comments, newTags, (FuncExpr) match, replace);
+        return new RuleExpr(src,new StringExpr(tags.child(0).value()),comments, newTags, (FuncExpr) match, replace);
     }
 
     private Expr parseMatch() {

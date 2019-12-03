@@ -6,8 +6,9 @@ import cn.lightfish.optgen.Operator;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SliceExpr extends Expr{
-   List<Expr> sliceExpr = new ArrayList<>();
+public class SliceExpr extends Expr {
+    List<Expr> sliceExpr = new ArrayList<>();
+
     public SliceExpr() {
         super(Operator.SliceOp);
     }
@@ -26,6 +27,17 @@ public class SliceExpr extends Expr{
     @Override
     public DataType inferredType() {
         return DataType.AnyDataType;
+    }
+
+    @Override
+    public Expr visit(VisitFunc visit) {
+        List<Expr> exprs = visitChildren(this, visit);
+        if (exprs != null) {
+            SliceExpr sliceExpr = new SliceExpr();
+            sliceExpr.sliceExpr.addAll(exprs);
+            return sliceExpr;
+        }
+        return this;
     }
 
     public void append(Expr arg) {

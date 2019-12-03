@@ -3,8 +3,11 @@ package cn.lightfish.optgen.ast;
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
 import cn.lightfish.optgen.SourceLoc;
+import lombok.Getter;
 import org.omg.CORBA.Any;
 
+import java.util.List;
+@Getter
 public class DefineFieldExpr extends Expr {
     CommentsExpr commentExpr;
     StringExpr name;
@@ -59,5 +62,15 @@ public class DefineFieldExpr extends Expr {
     @Override
     public void format(Appendable buff, int level) {
         format(this, buff, level);
+    }
+
+    @Override
+    public Expr visit(VisitFunc visit) {
+        List<Expr> exprs = visitChildren(this, visit);
+        if (exprs!=null){
+            return new DefineFieldExpr(source(),name,commentExpr,type);
+        }
+        return this;
+
     }
 }

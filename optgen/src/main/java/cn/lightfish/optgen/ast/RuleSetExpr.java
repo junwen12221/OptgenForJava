@@ -28,7 +28,18 @@ public class RuleSetExpr extends Expr {
         return DataType.AnyDataType;
     }
 
-    public void appendRule(RuleExpr rule) {
+    @Override
+    public Expr visit(VisitFunc visit) {
+        List<Expr> children = visitChildren(this, visit);
+        if (children != null) {
+            RuleSetExpr defineSetExpr = new RuleSetExpr();
+            defineSetExpr.ruleSetExpr.addAll((List)children);
+            return defineSetExpr;
+        }
+        return this;
+    }
+
+    public void append(RuleExpr rule) {
         ruleSetExpr.add(rule);
     }
 }

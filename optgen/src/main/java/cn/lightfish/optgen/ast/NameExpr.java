@@ -17,6 +17,11 @@ public class NameExpr extends Expr {
     }
 
     @Override
+    public Expr visit(VisitFunc visit) {
+        return this;
+    }
+
+    @Override
     public String value() {
         return nameExpr;
     }

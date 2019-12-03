@@ -33,6 +33,17 @@ public class NamesExpr extends Expr{
         return DataType.AnyDataType;
     }
 
+    @Override
+    public Expr visit(VisitFunc visit) {
+        List<Expr> exprs = visitChildren(this, visit);
+        if (exprs!=null){
+            NamesExpr namesExpr = new NamesExpr();
+            namesExpr.namesExprs.addAll((List)exprs);
+            return namesExpr;
+        }
+        return this;
+    }
+
     public void append(NameExpr nameExpr) {
         namesExprs.add(nameExpr);
     }

@@ -3,7 +3,13 @@ package cn.lightfish.optgen.ast;
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
 import cn.lightfish.optgen.SourceLoc;
+import lombok.Getter;
+import lombok.Setter;
 
+import java.util.List;
+
+@Getter
+@Setter
 public class BindExpr extends Expr {
     StringExpr label;
     Expr target;
@@ -56,5 +62,15 @@ public class BindExpr extends Expr {
     @Override
     public void format(Appendable buff, int level) {
         format(this, buff, level);
+    }
+
+    @Override
+    public Expr visit(VisitFunc visit) {
+        List<Expr> exprs = visitChildren(this
+                , visit);
+        if (exprs != null) {
+            return new BindExpr(source(),(StringExpr) exprs.get(0), exprs.get(1));
+        }
+        return this;
     }
 }

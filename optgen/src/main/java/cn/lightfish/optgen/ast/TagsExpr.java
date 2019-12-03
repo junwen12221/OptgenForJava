@@ -29,8 +29,22 @@ public class TagsExpr extends Expr{
         return DataType.AnyDataType;
     }
 
+    @Override
+    public Expr visit(VisitFunc visit) {
+        List<Expr> exprs = visitChildren(this, visit);
+        if (exprs!=null){
+            TagsExpr tagsExpr = new TagsExpr();
+            tagsExpr.tagsExpr.addAll((List)exprs);
+            return tagsExpr;
+        }
+        return this;
+    }
+
     public void append(TagExpr tagExpr) {
         tagsExpr.add(tagExpr);
     }
 
+    public boolean contains(String name) {
+        return tagsExpr.stream().map(i->i.value()).anyMatch(i->name.equals(i));
+    }
 }

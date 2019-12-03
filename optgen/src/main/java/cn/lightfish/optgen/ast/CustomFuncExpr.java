@@ -3,15 +3,23 @@ package cn.lightfish.optgen.ast;
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
 import cn.lightfish.optgen.SourceLoc;
+import lombok.Data;
 
+import java.util.List;
+
+@Data
 public class CustomFuncExpr extends Expr {
     private final SourceLoc sourceLoc;
-    NameExpr name;
+    Expr name;
     SliceExpr args;
     DataType type;
-    public CustomFuncExpr(SourceLoc sourceLoc) {
+
+
+    public CustomFuncExpr(Expr funcName, SliceExpr args, SourceLoc source) {
         super(Operator.CustomFuncOp);
-        this.sourceLoc = sourceLoc;
+        this.name = funcName;
+        this.args = args;
+        sourceLoc = source;
     }
 
     @Override
@@ -51,5 +59,14 @@ public class CustomFuncExpr extends Expr {
     @Override
     public void format(Appendable buff, int level) {
         format(this, buff, level);
+    }
+
+    @Override
+    public Expr visit(VisitFunc visit) {
+        List<Expr> exprs = visitChildren(this, visit);
+        if (exprs != null) {
+            return new CustomFuncExpr(exprs.get(0),(SliceExpr) exprs.get(1),source());
+        }
+        return this;
     }
 }

@@ -2,10 +2,13 @@ package cn.lightfish.optgen.ast;
 
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
+import cn.lightfish.optgen.RuleContentCompiler;
 import cn.lightfish.optgen.SourceLoc;
 import lombok.SneakyThrows;
 
 import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public abstract class Expr {
@@ -15,7 +18,7 @@ public abstract class Expr {
         this.op = op;
     }
 
-    Operator op() {
+  public   Operator op() {
         return op;
     }
 
@@ -46,6 +49,7 @@ public abstract class Expr {
         format(this, buff, level);
     }
 
+    public abstract Expr visit(VisitFunc visit);
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
         format(this, stringBuilder, 0);
@@ -148,7 +152,7 @@ public abstract class Expr {
     }
 
     @SneakyThrows
-    private static void writeIndent(Appendable stringBuilder, int level) {
+    public static void writeIndent(Appendable stringBuilder, int level) {
         for (int i = 0; i < level; i++) {
             stringBuilder.append('\t');
         }
@@ -157,5 +161,26 @@ public abstract class Expr {
 
     protected void panic(String format, Object... args) {
         throw new IllegalArgumentException(MessageFormat.format(format, args));
+    }
+
+    public List<Expr> visitChildren(Expr e,VisitFunc visit){
+        List<Expr> children = null;
+
+        int count = e.childCount();
+
+        for (int i = 0; i < count; i++) {
+            Expr before = e.child(i);
+            Expr after = visit.apply(before);
+            if (children==null&&before!=after){
+                children = new ArrayList<>();
+                for (int j = 0; j < i; j++) {
+                    children.add(e.child(j));
+                }
+            }
+            if (children!=null){
+                children.add(after);
+            }
+        }
+        return children;
     }
 }
