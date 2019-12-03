@@ -27,6 +27,9 @@ public class FuncExpr extends Expr {
     public FuncExpr(SourceLoc source, Expr funcName, SliceExpr args) {
         this(source, funcName);
         this.args = args;
+        if (funcName instanceof NamesExpr){
+            System.out.println();
+        }
     }
 
     @Override

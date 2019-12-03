@@ -6,6 +6,8 @@ import cn.lightfish.optgen.SourceLoc;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.List;
+
 @Data
 @EqualsAndHashCode
 public class RefExpr extends Expr {
@@ -52,6 +54,11 @@ public class RefExpr extends Expr {
 
     @Override
     public Expr visit(VisitFunc visit) {
+        List<Expr> exprs = visitChildren(this, visit);
+        if (exprs!=null){
+            Expr expr = exprs.get(0);
+            return new RefExpr(source(),(StringExpr)expr);
+        }
         return this;
     }
 }

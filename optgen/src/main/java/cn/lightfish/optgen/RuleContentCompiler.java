@@ -49,7 +49,7 @@ public class RuleContentCompiler {
             case FuncOp:
                 return compileFunc((FuncExpr) e);
             case BindOp:
-                return complieBind((BindExpr) e);
+                return compileBind((BindExpr) e);
             case RefOp: {
                 if (matchPattern && !customFunc) {
                     this.addDisallowedErr(e, "cannot use variable references");
@@ -71,7 +71,7 @@ public class RuleContentCompiler {
             }
             case NotOp:
             case AndOp:{
-                if (!matchPattern && customFunc) {
+                if (!matchPattern || customFunc) {
                     this.addDisallowedErr(e, "cannot use boolean expressions");
                 }
                 break;
@@ -104,7 +104,7 @@ public class RuleContentCompiler {
     }
 
 
-    private Expr complieBind(BindExpr bind) {
+    private Expr compileBind(BindExpr bind) {
         DataType dataType = this.complier.bindings.get(bind.getLabel());
         if (dataType!=null){
             addErr(bind,String.format("duplicate bind label '%s'",bind.getLabel()));
@@ -164,7 +164,7 @@ public class RuleContentCompiler {
             DefineExpr prototype = null;
             for (int i = 0; i < count; i++) {
                 NameExpr name = names.child(i);
-                DefineSetExpr defines = this.complier.compiled.lookupMatchDefines(name.value());
+                DefineSetExpr defines = this.complier.compiled.lookupMatchingDefines(name.value());
                 if (defines!=null){
 
                     int count1 = defines.childCount();
@@ -204,7 +204,7 @@ public class RuleContentCompiler {
                 }
             }
         }
-        if (matchPattern&&customFunc&&!nestd.customFunc){
+        if (this.matchPattern&&this.customFunc&&!nestd.customFunc){
             addErr(fn,"custom function name cannot be an operator name");
             return fn;
         }
@@ -212,6 +212,7 @@ public class RuleContentCompiler {
             return nestd.compile(e);
         });
         if (nestd.customFunc){
+           assert   args.child(0) != null;
             return new CustomFuncExpr(funcName,args,fn.source());
         }
         return new FuncExpr(fn.source(),funcName,args);
@@ -240,7 +241,7 @@ public class RuleContentCompiler {
                 return new CheckNamesRes(new NamesExpr(),false);
             }
 
-            DefineSetExpr defines = this.complier.compiled.lookupMatchDefines(names.child(0).value());
+            DefineSetExpr defines = this.complier.compiled.lookupMatchingDefines(names.child(0).value());
             if (defines==null||defines.childCount()==0){
                 return new CheckNamesRes(names,true);
             }
@@ -263,7 +264,7 @@ public class RuleContentCompiler {
             NameExpr opName = complier.opName;
             return new CompileOpNameRes(new NameExpr(opName.value()),true);
         }
-        Expr child =(RefExpr) fn.getArgs().child(0);
+        Expr child = fn.getArgs().child(0);
         if (!(child instanceof RefExpr)){
             addErr(fn,("invalid OpName argument: argument must be a variable reference"));
             return new CompileOpNameRes(fn,false);

@@ -24,7 +24,7 @@ public class CompiledExpr {
         return matchIndex.get(name);
     }
 
-    public DefineSetExpr lookupMatchDefines(String name){
+    public DefineSetExpr lookupMatchingDefines(String name){
         DefineSetExpr defineSetExpr = null;
         DefineExpr define = lookupDefine(name);
         if (define != null){

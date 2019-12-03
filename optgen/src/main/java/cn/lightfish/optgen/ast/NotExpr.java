@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import java.util.List;
+
 @Data
 @EqualsAndHashCode
 public class NotExpr extends Expr {
@@ -54,6 +56,10 @@ public class NotExpr extends Expr {
 
     @Override
     public Expr visit(VisitFunc visit) {
+        List<Expr> exprs = visitChildren(this, visit);
+        if (exprs!=null){
+            return new NotExpr(source(),exprs.get(0));
+        }
         return this;
     }
 }

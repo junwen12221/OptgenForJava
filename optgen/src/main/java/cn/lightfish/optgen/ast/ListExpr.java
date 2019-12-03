@@ -6,6 +6,8 @@ import cn.lightfish.optgen.SourceLoc;
 import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;
+import java.util.List;
+
 @EqualsAndHashCode
 public class ListExpr extends Expr {
     private final SourceLoc sourceLoc;
@@ -45,6 +47,12 @@ public class ListExpr extends Expr {
 
     @Override
     public Expr visit(VisitFunc visit) {
+        List<Expr> exprs = visitChildren(this, visit);
+        if (exprs!=null){
+            ListExpr listExpr = new ListExpr(source());
+            listExpr.items =(SliceExpr) exprs.get(0);
+            return listExpr;
+        }
         return this;
     }
 

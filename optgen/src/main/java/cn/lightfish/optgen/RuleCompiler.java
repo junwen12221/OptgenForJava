@@ -33,7 +33,7 @@ public class RuleCompiler {
         int count = namesExpr.childCount();
         for (int i = 0; i < count; i++) {
             NameExpr child = namesExpr.child(i);
-            DefineSetExpr defineSetExpr = compiled.lookupMatchDefines(child.value());
+            DefineSetExpr defineSetExpr = compiled.lookupMatchingDefines(child.value());
             if (defineSetExpr.getSet().isEmpty()) {
                 defineSetExpr = null;
                 this.compiler.addErr(rule.getMatch().source(), String.format("unrecognized match name '%s'", name));
@@ -41,7 +41,7 @@ public class RuleCompiler {
             Objects.requireNonNull(defineSetExpr);
             List<DefineExpr> set = defineSetExpr.getSet();
             Objects.requireNonNull(set);
-            for (DefineExpr defineExpr :set ) {
+            for (DefineExpr defineExpr : set) {
                 this.expandRule(new NameExpr(defineExpr.getName().value()));
             }
 
@@ -79,15 +79,17 @@ public class RuleCompiler {
                 match,
                 replace
         );
-        if (errCntBefore == this.compiler.errors.size()) {
-            inferTypes(ruleExpr.getMatch(), AnyDataType);
-            inferTypes(ruleExpr.getReplace(), AnyDataType);
-        }
-        try {
+
+//        if (errCntBefore == this.compiler.errors.size()) {
+//            inferTypes(ruleExpr.getMatch(), AnyDataType);
+//            inferTypes(ruleExpr.getReplace(), AnyDataType);
+//        }
+
             this.compiled.rules.append(ruleExpr);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+
+        System.out.println(compiled);
+
+
     }
 
     public void inferTypes(Expr e, DataType suggested) {
@@ -133,52 +135,49 @@ public class RuleCompiler {
                         NameExpr child = names.child(i);
                         List<DefineExpr> set = Collections.emptyList();
                         try {
-                            DefineSetExpr defineSetExpr1 = this.compiled.lookupMatchDefines(child.value());
-                            if (defineSetExpr1==null){
+                            DefineSetExpr defineSetExpr1 = this.compiled.lookupMatchingDefines(child.value());
+                            if (defineSetExpr1 == null) {
                                 continue;
                             }
-                            set =defineSetExpr1. getSet();
-                        }catch (Exception e1){
+                            set = defineSetExpr1.getSet();
+                        } catch (Exception e1) {
                             e1.printStackTrace();
                         }
                         assert !set.isEmpty();
-                        if (set!=null) {
+                        if (set != null) {
                             defineSetExpr.getSet().addAll(set);
                         }
                     }
                     funcExpr.setType(new DefineSetDataType(defineSetExpr));
 
-                    if( defineSetExpr.childCount() == 0){
+                    if (defineSetExpr.childCount() == 0) {
                         System.out.println();
                     }
                 }
-                DefineExpr prototype = null;
-                try {
-                    prototype = defineSetExpr.child(0);
-                }catch (Exception e1){
-                    e1.printStackTrace();
-                }
+
+                DefineExpr prototype = defineSetExpr.child(0);
+
                 inferTypes(funcExpr.getName(), AnyDataType);
 
                 SliceExpr sliceExpr = funcExpr.getArgs();
                 int count = sliceExpr.childCount();
                 for (int i = 0; i < count; i++) {
                     Expr arg = sliceExpr.child(i);
-                    DefineFieldExpr child = (DefineFieldExpr) prototype.getFields().child(i);
-                    StringExpr type = child.getType();
-                    ExternalDataType suggest = new ExternalDataType(new NameExpr(type.value()));
-                    this.inferTypes(arg, suggest);
+                        DefineFieldExpr child = (DefineFieldExpr) prototype.getFields().child(i);
+                        StringExpr type = child.getType();
+                        ExternalDataType suggest = new ExternalDataType(new NameExpr(type.value()));
+                        this.inferTypes(arg, suggest);
                 }
 
                 break;
             }
-            case CustomFuncOp:{
+            case CustomFuncOp: {
                 CustomFuncExpr e1 = (CustomFuncExpr) e;
                 e1.setType(suggested);
                 SliceExpr args = e1.getArgs();
                 int count = args.childCount();
                 for (int i = 0; i < count; i++) {
-                    inferTypes(args.child(i),AnyDataType);
+                    inferTypes(args.child(i), AnyDataType);
                 }
                 break;
             }
