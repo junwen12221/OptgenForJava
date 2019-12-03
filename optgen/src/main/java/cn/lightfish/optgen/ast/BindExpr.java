@@ -3,6 +3,7 @@ package cn.lightfish.optgen.ast;
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
 import cn.lightfish.optgen.SourceLoc;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,6 +11,7 @@ import java.util.List;
 
 @Getter
 @Setter
+@EqualsAndHashCode
 public class BindExpr extends Expr {
     StringExpr label;
     Expr target;

@@ -73,7 +73,7 @@ public abstract class Expr {
                         break;
                     }
                     default: {
-                        buff.append(Objects.toString(e.value()));
+                        buff.append(e.value());
                         break;
                     }
                 }
@@ -107,7 +107,8 @@ public abstract class Expr {
 
                 DataType type = e.inferredType();
                 if (type != null && !type.equals(DataType.AnyDataType)) {
-                    buff.append(" Typ=").append(String.valueOf(e.inferredType()));
+                    DataType dataType = e.inferredType();
+                    buff.append(" Typ=").append(dataType.toString());
                 }
                 if (src != null && e.childCount() != 0) {
                     buff.append(" Src=<").append(src.toString()).append(">");
@@ -136,7 +137,9 @@ public abstract class Expr {
                 DataType typ = e.inferredType();
                 if (typ != null && typ != DataType.AnyDataType) {
                     writeIndent(buff, level);
-                    buff.append("Typ=").append(String.valueOf(e.inferredType())).append('\n');
+                    DataType dataType = e.inferredType();
+                    String s = dataType.toString();
+                    buff.append("Typ=").append(s).append('\n');
                 }
                 if (src != null && e.childCount() != 0) {
                     writeIndent(buff, level);
@@ -171,7 +174,7 @@ public abstract class Expr {
         for (int i = 0; i < count; i++) {
             Expr before = e.child(i);
             Expr after = visit.apply(before);
-            if (children==null&&before!=after){
+            if (children==null&&!before.equals(after)){
                 children = new ArrayList<>();
                 for (int j = 0; j < i; j++) {
                     children.add(e.child(j));

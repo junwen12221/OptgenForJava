@@ -3,6 +3,7 @@ package cn.lightfish.optgen.ast;
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
 import cn.lightfish.optgen.SourceLoc;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,9 +11,10 @@ import java.util.List;
 
 @Getter
 @Setter
+@EqualsAndHashCode
 public class FuncExpr extends Expr {
     Expr name;
-    SliceExpr args = new SliceExpr();
+  private   SliceExpr args = new SliceExpr();
     DataType type;
     SourceLoc sourceLoc;
 
@@ -84,7 +86,13 @@ public class FuncExpr extends Expr {
     }
 
     public boolean hasDynamicName() {
-        return !(this.name instanceof NameExpr) && !(this.name instanceof NamesExpr);
+        if (this.name instanceof NameExpr){
+            return false;
+        }
+        if (this.name instanceof NamesExpr){
+            return false;
+        }
+        return true;
     }
 
 

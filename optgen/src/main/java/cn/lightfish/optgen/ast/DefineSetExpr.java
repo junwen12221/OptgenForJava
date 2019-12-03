@@ -3,11 +3,13 @@ package cn.lightfish.optgen.ast;
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Data
+@EqualsAndHashCode
 public class DefineSetExpr extends Expr {
     final List<DefineExpr> set = new ArrayList<>();
 

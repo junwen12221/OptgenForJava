@@ -3,10 +3,11 @@ package cn.lightfish.optgen.ast;
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
 import cn.lightfish.optgen.SourceLoc;
+import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;
 import java.util.List;
-
+@EqualsAndHashCode
 public class CommentsExpr extends Expr{
     List<CommentExpr> commentExprs = new ArrayList<>();
     public CommentsExpr() {

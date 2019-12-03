@@ -3,6 +3,7 @@ package cn.lightfish.optgen.ast;
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
 import cn.lightfish.optgen.SourceLoc;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.Objects;
 import static cn.lightfish.optgen.DataType.AnyDataType;
 
 @Getter
+@EqualsAndHashCode
 public class DefineExpr extends Expr {
     private final SourceLoc sourceLoc;
     CommentsExpr comments;

@@ -4,10 +4,12 @@ import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
 import cn.lightfish.optgen.SourceLoc;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.List;
 
 @Data
+@EqualsAndHashCode
 public class AnyExpr extends Expr {
 
     private SourceLoc sourceLoc;

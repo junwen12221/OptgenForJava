@@ -2,10 +2,11 @@ package cn.lightfish.optgen.ast;
 
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
+import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;
 import java.util.List;
-
+@EqualsAndHashCode
 public class RuleSetExpr extends Expr {
     List<RuleExpr> ruleSetExpr = new ArrayList<>();
 

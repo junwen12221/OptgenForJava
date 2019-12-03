@@ -4,12 +4,14 @@ import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
 import cn.lightfish.optgen.RuleCompiler;
 import cn.lightfish.optgen.SourceLoc;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.List;
 import java.util.regex.Matcher;
 
 @Getter
+@EqualsAndHashCode
 public class RuleExpr extends Expr {
     private final SourceLoc sourceLoc;
     CommentsExpr comments;

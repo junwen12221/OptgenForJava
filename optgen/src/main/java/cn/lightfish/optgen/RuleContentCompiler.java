@@ -4,7 +4,6 @@ import cn.lightfish.optgen.ast.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.lang.reflect.AnnotatedType;
 import java.text.MessageFormat;
 import java.util.List;
 
@@ -36,20 +35,19 @@ public class RuleContentCompiler {
     @Data
     class CompileOpNameRes {
         Expr fn;
-        private final boolean b;
         boolean ok;
 
         public CompileOpNameRes(Expr fn, boolean b) {
 
             this.fn = fn;
-            this.b = b;
+            this.ok = b;
         }
     }
 
     public Expr compile(Expr e) {
         switch (e.op()) {
             case FuncOp:
-                return complieFunc((FuncExpr) e);
+                return compileFunc((FuncExpr) e);
             case BindOp:
                 return complieBind((BindExpr) e);
             case RefOp: {
@@ -57,7 +55,7 @@ public class RuleContentCompiler {
                     this.addDisallowedErr(e, "cannot use variable references");
                 } else {
                     RefExpr e1 = (RefExpr) e;
-                    if (this.complier.bindings.containsKey(e1.getLabel())) {
+                    if (!this.complier.bindings.containsKey(e1.getLabel())) {
                         this.addErr(e, String.format("unrecognized variable name '%s'", e1.getLabel()));
                     }
                 }
@@ -139,7 +137,7 @@ public class RuleContentCompiler {
             }
         }
     }
-    private Expr complieFunc(FuncExpr fn) {
+    private Expr compileFunc(FuncExpr fn) {
         RuleContentCompiler nestd = new RuleContentCompiler(this.complier,fn.source(),this.matchPattern);
 
         Expr funcName = fn.getName();
@@ -148,7 +146,7 @@ public class RuleContentCompiler {
             if (matchPattern){
                 addErr(fn,("cannot match dynamic name"));
             }
-            funcName = complieFunc((FuncExpr)funcName);
+            funcName = compileFunc((FuncExpr)funcName);
         }else {
             CheckNamesRes checkNamesRes = checkNames(fn);
             if (!checkNamesRes.ok){
@@ -199,7 +197,7 @@ public class RuleContentCompiler {
                     if ("OpName".equals(name.value())){
                         CompileOpNameRes compileOpNameRes = this.compileOpName(fn);
                         if(compileOpNameRes.ok){
-                            return checkNamesRes.names;
+                            return compileOpNameRes.fn;
                         }
                     }
                     nestd.customFunc = true;
@@ -243,7 +241,7 @@ public class RuleContentCompiler {
             }
 
             DefineSetExpr defines = this.complier.compiled.lookupMatchDefines(names.child(0).value());
-            if (defines.childCount()==0){
+            if (defines==null||defines.childCount()==0){
                 return new CheckNamesRes(names,true);
             }
 
@@ -262,10 +260,11 @@ public class RuleContentCompiler {
             return new CompileOpNameRes(fn,false);
         }
         if (fn.getArgs().childCount()==0){
-            return new CompileOpNameRes(complier.opName,true);
+            NameExpr opName = complier.opName;
+            return new CompileOpNameRes(new NameExpr(opName.value()),true);
         }
-        Expr child =(Expr) fn.getArgs().child(0);
-        if (child instanceof RefExpr){
+        Expr child =(RefExpr) fn.getArgs().child(0);
+        if (!(child instanceof RefExpr)){
             addErr(fn,("invalid OpName argument: argument must be a variable reference"));
             return new CompileOpNameRes(fn,false);
         }

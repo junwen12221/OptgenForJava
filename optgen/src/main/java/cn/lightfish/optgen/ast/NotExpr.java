@@ -4,9 +4,11 @@ import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
 import cn.lightfish.optgen.SourceLoc;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 @Data
+@EqualsAndHashCode
 public class NotExpr extends Expr {
     Expr input;
     SourceLoc src;

@@ -46,7 +46,7 @@ public class Compiler {
         if (!compileDeines(root.getDefines())) {
             return null;
         }
-        if (compileRules(root.getRules())) {
+        if (!compileRules(root.getRules())) {
             return null;
         }
         return compiled;
@@ -72,7 +72,11 @@ public class Compiler {
             RuleExpr rule = (RuleExpr)ruleSetExpr.child(i);
             String name = rule.getMatch().singleName();
             RuleSetExpr ruleSetExpr1 = compiled.matchIndex.get(name);
+            if (ruleSetExpr1 == null){
+                ruleSetExpr1 = new RuleSetExpr();
+            }
             ruleSetExpr1.append(rule);
+            compiled.matchIndex.put(name,ruleSetExpr1);
         }
         return errors.isEmpty();
     }

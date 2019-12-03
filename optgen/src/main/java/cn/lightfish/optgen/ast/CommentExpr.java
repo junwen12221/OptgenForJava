@@ -3,9 +3,10 @@ package cn.lightfish.optgen.ast;
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
 import cn.lightfish.optgen.SourceLoc;
+import lombok.EqualsAndHashCode;
 
 import java.util.List;
-
+@EqualsAndHashCode
 public class CommentExpr extends Expr{
     String comment;
     public CommentExpr(String literal) {

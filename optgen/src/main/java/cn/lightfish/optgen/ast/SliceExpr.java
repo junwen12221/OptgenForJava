@@ -2,12 +2,13 @@ package cn.lightfish.optgen.ast;
 
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
+import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;
 import java.util.List;
-
+@EqualsAndHashCode
 public class SliceExpr extends Expr {
-    List<Expr> sliceExpr = new ArrayList<>();
+   private List<Expr> sliceExpr = new ArrayList<>();
 
     public SliceExpr() {
         super(Operator.SliceOp);

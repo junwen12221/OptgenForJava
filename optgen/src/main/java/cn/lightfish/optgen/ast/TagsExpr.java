@@ -3,10 +3,11 @@ package cn.lightfish.optgen.ast;
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
 import cn.lightfish.optgen.SourceLoc;
+import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;
 import java.util.List;
-
+@EqualsAndHashCode
 public class TagsExpr extends Expr{
     List<TagExpr> tagsExpr = new ArrayList<>();
     public TagsExpr() {
@@ -45,6 +46,12 @@ public class TagsExpr extends Expr{
     }
 
     public boolean contains(String name) {
-        return tagsExpr.stream().map(i->i.value()).anyMatch(i->name.equals(i));
+        for (TagExpr tagExpr : tagsExpr) {
+            String i = tagExpr.value();
+            if (name.equals(i)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

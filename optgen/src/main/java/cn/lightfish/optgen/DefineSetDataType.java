@@ -23,7 +23,7 @@ public class DefineSetDataType implements DataType {
             if (i!=0){
                 stringBuilder.append(" | ");
             }
-            stringBuilder.append(define.getName());
+            stringBuilder.append(define.getName().value());
         }
         if (defines.childCount()>1){
             stringBuilder.append(']');

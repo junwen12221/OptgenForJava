@@ -3,8 +3,7 @@ package cn.lightfish.optgen;
 import cn.lightfish.optgen.ast.*;
 import lombok.Data;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static cn.lightfish.optgen.DataType.*;
 
@@ -35,12 +34,15 @@ public class RuleCompiler {
         for (int i = 0; i < count; i++) {
             NameExpr child = namesExpr.child(i);
             DefineSetExpr defineSetExpr = compiled.lookupMatchDefines(child.value());
-            if(defineSetExpr.getSet().isEmpty()){
+            if (defineSetExpr.getSet().isEmpty()) {
                 defineSetExpr = null;
-                this.compiler.addErr(rule.getMatch().source(),String.format("unrecognized match name '%s'",name));
+                this.compiler.addErr(rule.getMatch().source(), String.format("unrecognized match name '%s'", name));
             }
-            for (DefineExpr defineExpr : defineSetExpr.getSet()) {
-                this.expandRule(new NameExpr( defineExpr.getName().value()));
+            Objects.requireNonNull(defineSetExpr);
+            List<DefineExpr> set = defineSetExpr.getSet();
+            Objects.requireNonNull(set);
+            for (DefineExpr defineExpr :set ) {
+                this.expandRule(new NameExpr(defineExpr.getName().value()));
             }
 
         }
@@ -55,7 +57,12 @@ public class RuleCompiler {
         NamesExpr namesExpr = new NamesExpr();
         namesExpr.append(new NameExpr(opName.value()));
         FuncExpr match = new FuncExpr(this.rule.getMatch().source(), namesExpr);
-        match.append(match.getArgs());
+
+        SliceExpr args = this.rule.getMatch().getArgs();
+        int count = args.childCount();
+        for (int i = 0; i < count; i++) {
+            match.append(args.child(i));
+        }
 
         RuleContentCompiler compiler;
 
@@ -63,34 +70,38 @@ public class RuleCompiler {
         match = (FuncExpr) compiler.compile(match);
 
         compiler = new RuleContentCompiler(this, this.rule.source(), false);
-        compiler.compile(rule.getReplace());
+        FuncExpr replace = (FuncExpr) compiler.compile(rule.getReplace());
 
         RuleExpr ruleExpr = new RuleExpr(rule.getSourceLoc(),
                 this.rule.getName(),
                 this.rule.getComments(),
                 this.rule.getTags(),
-                this.rule.getMatch(),
-                this.rule.getReplace()
+                match,
+                replace
         );
         if (errCntBefore == this.compiler.errors.size()) {
             inferTypes(ruleExpr.getMatch(), AnyDataType);
             inferTypes(ruleExpr.getReplace(), AnyDataType);
         }
-        this.compiled.rules.append(ruleExpr);
-
+        try {
+            this.compiled.rules.append(ruleExpr);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void inferTypes(Expr e, DataType suggested) {
         Operator op = e.op();
         switch (op) {
             case FuncOp: {
+                DefineSetExpr defineSetExpr;
                 FuncExpr funcExpr = (FuncExpr) e;
                 if (funcExpr.hasDynamicName()) {
                     Expr name = funcExpr.getName();
                     boolean ok = name instanceof CustomFuncExpr;
                     CustomFuncExpr customFuncExpr = (CustomFuncExpr) name;
 
-                    if (!ok || "OpName".equals(customFuncExpr.getName().value())) {
+                    if (!ok || !"OpName".equals(customFuncExpr.getName().value())) {
                         panic(String.format("%s not allowed as dynamic function name", funcExpr.getName().value()));
                     }
                     StringExpr label = ((RefExpr) funcExpr.getArgs().child(0)).getLabel();
@@ -106,22 +117,68 @@ public class RuleCompiler {
                         );
                         break;
                     }
-                    DefineSetExpr type1 = (DefineSetExpr) type;
+                    defineSetExpr = (DefineSetExpr) type;
 
-                    if (type1.childCount() == 1) {
-                        DefineExpr child = type1.child(0);
+                    if (defineSetExpr.childCount() == 1) {
+                        DefineExpr child = defineSetExpr.child(0);
                         funcExpr.setName(new NameExpr(child.getName().value()));
                     }
+                    assert defineSetExpr.childCount() > 0;
                 } else {
                     NamesExpr names = funcExpr.nameChoice();
-                    DefineSetExpr defineSetExpr = new DefineSetExpr();
+                    defineSetExpr = new DefineSetExpr();
                     int count = names.childCount();
-
+                    assert count > 0;
                     for (int i = 0; i < count; i++) {
                         NameExpr child = names.child(i);
-                        defineSetExpr.getSet().addAll(this.compiled.lookupMatchDefines(child.value()).getSet());
+                        List<DefineExpr> set = Collections.emptyList();
+                        try {
+                            DefineSetExpr defineSetExpr1 = this.compiled.lookupMatchDefines(child.value());
+                            if (defineSetExpr1==null){
+                                continue;
+                            }
+                            set =defineSetExpr1. getSet();
+                        }catch (Exception e1){
+                            e1.printStackTrace();
+                        }
+                        assert !set.isEmpty();
+                        if (set!=null) {
+                            defineSetExpr.getSet().addAll(set);
+                        }
                     }
                     funcExpr.setType(new DefineSetDataType(defineSetExpr));
+
+                    if( defineSetExpr.childCount() == 0){
+                        System.out.println();
+                    }
+                }
+                DefineExpr prototype = null;
+                try {
+                    prototype = defineSetExpr.child(0);
+                }catch (Exception e1){
+                    e1.printStackTrace();
+                }
+                inferTypes(funcExpr.getName(), AnyDataType);
+
+                SliceExpr sliceExpr = funcExpr.getArgs();
+                int count = sliceExpr.childCount();
+                for (int i = 0; i < count; i++) {
+                    Expr arg = sliceExpr.child(i);
+                    DefineFieldExpr child = (DefineFieldExpr) prototype.getFields().child(i);
+                    StringExpr type = child.getType();
+                    ExternalDataType suggest = new ExternalDataType(new NameExpr(type.value()));
+                    this.inferTypes(arg, suggest);
+                }
+
+                break;
+            }
+            case CustomFuncOp:{
+                CustomFuncExpr e1 = (CustomFuncExpr) e;
+                e1.setType(suggested);
+                SliceExpr args = e1.getArgs();
+                int count = args.childCount();
+                for (int i = 0; i < count; i++) {
+                    inferTypes(args.child(i),AnyDataType);
                 }
                 break;
             }

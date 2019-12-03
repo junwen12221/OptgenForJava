@@ -2,7 +2,9 @@ package cn.lightfish.optgen.ast;
 
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
+import lombok.EqualsAndHashCode;
 
+@EqualsAndHashCode
 public class NameExpr extends Expr {
     String nameExpr;
     public NameExpr( String nameExpr) {

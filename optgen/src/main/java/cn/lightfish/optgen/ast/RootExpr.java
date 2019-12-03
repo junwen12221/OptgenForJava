@@ -3,11 +3,13 @@ package cn.lightfish.optgen.ast;
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
 import cn.lightfish.optgen.SourceLoc;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.List;
 
 @Getter
+@EqualsAndHashCode
 public class RootExpr extends Expr {
     DefineSetExpr defines = new DefineSetExpr();
     RuleSetExpr rules = new RuleSetExpr();

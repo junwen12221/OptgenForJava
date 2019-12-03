@@ -12,7 +12,7 @@ import java.util.Map;
 
 public class CompiledExpr {
     DefineSetExpr defines;
-    RuleSetExpr rules ;
+    RuleSetExpr rules = new RuleSetExpr();
     List<String> defineTags = new ArrayList<>();
     Map<String, DefineExpr> defineIndex = new HashMap<>();
     Map<String, RuleSetExpr> matchIndex = new HashMap<>();
@@ -25,16 +25,20 @@ public class CompiledExpr {
     }
 
     public DefineSetExpr lookupMatchDefines(String name){
-        DefineSetExpr defineSetExpr = new DefineSetExpr();
+        DefineSetExpr defineSetExpr = null;
         DefineExpr define = lookupDefine(name);
         if (define != null){
+            defineSetExpr = new DefineSetExpr();
             defineSetExpr.append(define);
             return defineSetExpr;
         }else {
-            int count = defineSetExpr.childCount();
-            for (int i = 0; i < count; i++) {
-                if(define.getTags().contains(name)){
-                    defineSetExpr.append(define);
+            List<DefineExpr> set = this.defines.getSet();
+            for (DefineExpr defineExpr : set) {
+                if (defineExpr.getTags().contains(name)) {
+                    if (defineSetExpr == null){
+                        defineSetExpr = new DefineSetExpr();
+                    }
+                    defineSetExpr.append(defineExpr);
                 }
             }
         }
