@@ -58,7 +58,7 @@ public interface DataType {
                 for (DefineExpr defineExpr : ((DefineSetDataType) dt2).defines.getSet()) {
                     StringExpr name = defineExpr.getName();
                     Boolean aBoolean = map.get(name);
-                    if (Boolean.TRUE.equals(aBoolean)) {
+                    if (!Boolean.TRUE.equals(aBoolean)) {
                         return true;
                     }
             }
