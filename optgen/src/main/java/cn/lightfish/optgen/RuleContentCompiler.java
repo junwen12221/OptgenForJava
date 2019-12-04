@@ -245,7 +245,6 @@ public class RuleContentCompiler {
             return nested.compile(e);
         });
         if (nested.customFunc){
-           assert   args.child(0) != null;
             return new CustomFuncExpr(funcName,args,fn.source());
         }
 //        assert funcName instanceof NamesExpr || funcName instanceof NameExpr;

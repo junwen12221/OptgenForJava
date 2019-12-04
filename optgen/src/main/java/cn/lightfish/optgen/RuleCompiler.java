@@ -4,6 +4,8 @@ import cn.lightfish.optgen.ast.*;
 import lombok.Data;
 
 import java.util.*;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import static cn.lightfish.optgen.DataType.*;
 
@@ -47,19 +49,29 @@ public class RuleCompiler {
         for (int i = 0; i < count; i++) {
             NameExpr child = namesExpr.child(i);
             DefineSetExpr defineSetExpr = compiled.lookupMatchingDefines(child.value());
-            if (defineSetExpr.getSet().isEmpty()) {
+            if (defineSetExpr == null||defineSetExpr.getSet().isEmpty()) {
                 // No defines with that tag found, which is not allowed.
                 defineSetExpr = null;
-                this.compiler.addErr(rule.getMatch().source(), String.format("unrecognized match name '%s'", name));
+                this.compiler.addErr(rule.getMatch().source(),format("unrecognized match name '%s'", name.value()));
             }
-            Objects.requireNonNull(defineSetExpr);
-            List<DefineExpr> set = defineSetExpr.getSet();
-            Objects.requireNonNull(set);
-            for (DefineExpr defineExpr : set) {
-                this.expandRule(new NameExpr(defineExpr.getName().value()));
+            if (defineSetExpr!=null) {
+                List<DefineExpr> set = defineSetExpr.getSet();
+                Objects.requireNonNull(set);
+                for (DefineExpr defineExpr : set) {
+                    this.expandRule(new NameExpr(defineExpr.getName().value()));
+                }
             }
 
         }
+    }
+    String format(String format,Object i){
+        return   String.format(format, i == null?"Unknown":Objects.toString(i));
+    }
+    String format(String format,Object... args){
+        if (args == null){
+            return format(format,(Object) args);
+        }
+      return   String.format(format, Arrays.stream(args).map(i->i == null?"Unknown":Objects.toString(i)).collect(Collectors.toList()));
     }
 
     /**
@@ -93,7 +105,7 @@ public class RuleCompiler {
 
         compiler = new RuleContentCompiler(this, this.rule.source(), false);
         System.out.println("-------------------------------replace----------------------------------------");
-        FuncExpr replace = compileReplace(compiler, rule.getReplace());
+        Expr replace = compiler.compile( rule.getReplace());
 
         RuleExpr ruleExpr = new RuleExpr(rule.getSourceLoc(),
                 this.rule.getName(),
@@ -102,8 +114,6 @@ public class RuleCompiler {
                 match,
                 replace
         );
-
-        System.out.println(ruleExpr);
 
         /*
          Infer data types for expressions within the match and replace patterns.
@@ -115,14 +125,6 @@ public class RuleCompiler {
         }
 
             this.compiled.rules.append(ruleExpr);
-
-        System.out.println(compiled);
-
-
-    }
-
-    private FuncExpr compileReplace(RuleContentCompiler compiler, Expr replace) {
-        return (FuncExpr) compiler.compile(replace);
     }
 
     /**
@@ -257,9 +259,9 @@ public class RuleCompiler {
                 // Assign most restrictive type to list expression.
                 DataType type = mostRestrictiveDataType(ListDataType, suggested);
                 t.setType(type);
-                int count = t.childCount();
-                for (int i = 0; i < count; i++) {
-                    Expr child = t.child(i);
+                SliceExpr child1 = (SliceExpr) t.child(0);
+                for (int i = 0; i < child1.childCount(); i++) {
+                    Expr child = child1.child(i);
                     inferTypes(child, AnyDataType);
                 }
                 break;

@@ -112,7 +112,7 @@ public class Compiler {
             StringExpr name = define.getName();
             // Record the define in the index for fast lookup.
             if (compiled.defineIndex.containsKey(name.value())) {
-                addErr(define.source(), String.format("duplicate '%s' define statement", name));
+                addErr(define.source(), String.format("duplicate '%s' define statement", name.value()));
             }
             compiled.defineIndex.put(name.value(), define);
 

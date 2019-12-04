@@ -10,7 +10,7 @@ public interface DataType {
     public static DataType AnyDataType = new ExternalDataType("<any>");
     public static DataType ListDataType = new ExternalDataType("<list>");
     public static DataType StringDataType = new ExternalDataType("<string>");
-    public static DataType Int64DataType = new ExternalDataType("<int54>");
+    public static DataType Int64DataType = new ExternalDataType("<int64>");
 
     default boolean isBuiltinType() {
         return this == ListDataType || this == StringDataType || this == Int64DataType;
