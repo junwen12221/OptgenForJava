@@ -7,14 +7,24 @@ import java.util.*;
 
 import static cn.lightfish.optgen.DataType.*;
 
+/**
+ * ruleCompiler compiles a single rule. It is a separate struct in order to
+ * keep state for the ruleContentCompiler.
+ */
 @Data
 public class RuleCompiler {
     Compiler compiler;
     CompiledExpr compiled;
     RuleExpr rule;
 
+
+    // bindings tracks variable bindings in order to ensure uniqueness and to
+    // infer types.
     Map<StringExpr, DataType> bindings;
 
+
+    // opName keeps the root match name in order to compile the OpName built-in
+    // function.
     NameExpr opName;
 
     public void compile(Compiler compiler, RuleExpr rule) {
@@ -25,16 +35,20 @@ public class RuleCompiler {
         Expr name = rule.getMatch().getName();
 
         if (name instanceof FuncExpr) {
+            // Function name is itself a function that dynamically determines name.
             this.compiler.addErr(rule.getMatch().source(), "cannot match dynamic name");
             return;
         }
 
+        // Expand root rules that match multiple operators into a separate match
+        // expression for each matching operator.
         NamesExpr namesExpr = rule.getMatch().nameChoice();
         int count = namesExpr.childCount();
         for (int i = 0; i < count; i++) {
             NameExpr child = namesExpr.child(i);
             DefineSetExpr defineSetExpr = compiled.lookupMatchingDefines(child.value());
             if (defineSetExpr.getSet().isEmpty()) {
+                // No defines with that tag found, which is not allowed.
                 defineSetExpr = null;
                 this.compiler.addErr(rule.getMatch().source(), String.format("unrecognized match name '%s'", name));
             }
@@ -48,29 +62,38 @@ public class RuleCompiler {
         }
     }
 
+    /**
+     * expandRule rewrites the current rule to match the given opname rather than
+     * a list of names or a tag name. This transformation makes it easier for the
+     * code generator, since all rules will never match more than one op at the
+     * top-level.
+     * @param opName
+     */
     public void expandRule(NameExpr opName) {
+        // Remember current error count in order to detect whether ruleContentCompiler
+        // adds additional errors.
         int errCntBefore = this.compiler.errors.size();
-        this.opName = opName;
+
+        // Remember the root opname in case it's needed to compile the OpName
+        // built-in function.
+        this.opName = new NameExpr(opName.value());
 
         this.bindings = new HashMap<>();
 
+
+        // Construct new match expression that matches a single name.
         NamesExpr namesExpr = new NamesExpr();
         namesExpr.append(new NameExpr(opName.value()));
-        FuncExpr match = new FuncExpr(this.rule.getMatch().source(), namesExpr);
-
-        SliceExpr args = this.rule.getMatch().getArgs();
-        int count = args.childCount();
-        for (int i = 0; i < count; i++) {
-            match.append(args.child(i));
-        }
+        FuncExpr match = new FuncExpr(this.rule.getMatch().source(), namesExpr, this.rule.getMatch().getArgs());
 
         RuleContentCompiler compiler;
 
         compiler = new RuleContentCompiler(this, this.rule.source(), true);
-        match = (FuncExpr) compiler.compile(match);
+        match =(FuncExpr) compiler.compile( match);
 
         compiler = new RuleContentCompiler(this, this.rule.source(), false);
-        FuncExpr replace = (FuncExpr) compiler.compile(rule.getReplace());
+        System.out.println("-------------------------------replace----------------------------------------");
+        FuncExpr replace = compileReplace(compiler, rule.getReplace());
 
         RuleExpr ruleExpr = new RuleExpr(rule.getSourceLoc(),
                 this.rule.getName(),
@@ -80,10 +103,16 @@ public class RuleCompiler {
                 replace
         );
 
-//        if (errCntBefore == this.compiler.errors.size()) {
-//            inferTypes(ruleExpr.getMatch(), AnyDataType);
-//            inferTypes(ruleExpr.getReplace(), AnyDataType);
-//        }
+        System.out.println(ruleExpr);
+
+        /*
+         Infer data types for expressions within the match and replace patterns.
+         Do this only if the rule triggered no errors.
+         */
+        if (errCntBefore == this.compiler.errors.size()) {
+            inferTypes(ruleExpr.getMatch(), AnyDataType);
+            inferTypes(ruleExpr.getReplace(), AnyDataType);
+        }
 
             this.compiled.rules.append(ruleExpr);
 
@@ -92,12 +121,26 @@ public class RuleCompiler {
 
     }
 
+    private FuncExpr compileReplace(RuleContentCompiler compiler, Expr replace) {
+        return (FuncExpr) compiler.compile(replace);
+    }
+
+    /**
+     * inferTypes walks the tree and annotates it with inferred data types. It
+     * reports any typing errors it encounters. Each expression is annotated with
+     * either its "bottom-up" type which it infers from its inputs, or else its
+     * "top-down" type (the suggested argument), which is passed down from its
+     * ancestor(s). Each operator has its own rules of which to use.
+     * @param e
+     * @param suggested
+     */
     public void inferTypes(Expr e, DataType suggested) {
         Operator op = e.op();
         switch (op) {
             case FuncOp: {
-                DefineSetExpr defineSetExpr;
+                DefineSetDataType    defType;
                 FuncExpr funcExpr = (FuncExpr) e;
+                // Special-case the OpName built-in function.
                 if (funcExpr.hasDynamicName()) {
                     Expr name = funcExpr.getName();
                     boolean ok = name instanceof CustomFuncExpr;
@@ -106,57 +149,44 @@ public class RuleCompiler {
                     if (!ok || !"OpName".equals(customFuncExpr.getName().value())) {
                         panic(String.format("%s not allowed as dynamic function name", funcExpr.getName().value()));
                     }
-                    StringExpr label = ((RefExpr) funcExpr.getArgs().child(0)).getLabel();
+                    // Inherit type of the opname target.
+                    StringExpr label = ((RefExpr) customFuncExpr.getArgs().child(0)).getLabel();
                     DataType type = this.bindings.get(label);
+                    funcExpr.setType(type);
                     if (type == null) {
                         panic(String.format("$%s does not have its type set", label.value()));
                     }
 
-                    ok = type instanceof DefineSetExpr;
+                    ok = type instanceof DefineSetDataType;
                     if (!ok) {
                         this.compiler.addErr(customFuncExpr.getArgs().child(0).source(),
                                 "cannot infer type of construction expression"
                         );
                         break;
                     }
-                    defineSetExpr = (DefineSetExpr) type;
-
-                    if (defineSetExpr.childCount() == 1) {
-                        DefineExpr child = defineSetExpr.child(0);
+                    defType  = (DefineSetDataType) type;
+                    // If the OpName refers to a single operator, rewrite it as a simple
+                    // static name.
+                    if (defType.defines.childCount() == 1) {
+                        DefineExpr child = defType.defines.child(0);
                         funcExpr.setName(new NameExpr(child.getName().value()));
                     }
-                    assert defineSetExpr.childCount() > 0;
                 } else {
+                    // Construct list of defines that can be matched.
                     NamesExpr names = funcExpr.nameChoice();
-                    defineSetExpr = new DefineSetExpr();
+                    DefineSetExpr defines = new DefineSetExpr();
                     int count = names.childCount();
-                    assert count > 0;
                     for (int i = 0; i < count; i++) {
-                        NameExpr child = names.child(i);
-                        List<DefineExpr> set = Collections.emptyList();
-                        try {
-                            DefineSetExpr defineSetExpr1 = this.compiled.lookupMatchingDefines(child.value());
-                            if (defineSetExpr1 == null) {
-                                continue;
-                            }
-                            set = defineSetExpr1.getSet();
-                        } catch (Exception e1) {
-                            e1.printStackTrace();
-                        }
-                        assert !set.isEmpty();
-                        if (set != null) {
-                            defineSetExpr.getSet().addAll(set);
-                        }
+                        defines.append(this.compiled.lookupMatchingDefines(names.child(i).value()));
                     }
-                    funcExpr.setType(new DefineSetDataType(defineSetExpr));
-
-                    if (defineSetExpr.childCount() == 0) {
-                        System.out.println();
-                    }
+                    defType = new DefineSetDataType(defines);
+                    funcExpr.setType(defType);
                 }
+                // First define in list is considered the "prototype" that all others
+                // match. The matching is checked in ruleContentCompiler.compileFunc.
+                DefineExpr prototype = defType.defines.child(0);
 
-                DefineExpr prototype = defineSetExpr.child(0);
-
+                // Recurse on name and arguments.
                 inferTypes(funcExpr.getName(), AnyDataType);
 
                 SliceExpr sliceExpr = funcExpr.getArgs();
@@ -172,17 +202,41 @@ public class RuleCompiler {
                 break;
             }
             case CustomFuncOp: {
+                // Return type of custom function isn't known, but might be inferred from
+                // context in which it's used.
                 CustomFuncExpr e1 = (CustomFuncExpr) e;
                 e1.setType(suggested);
                 SliceExpr args = e1.getArgs();
                 int count = args.childCount();
+                // Recurse on arguments, passing AnyDataType as suggested type, because
+                // no information is known about their types.
                 for (int i = 0; i < count; i++) {
                     inferTypes(args.child(i), AnyDataType);
                 }
                 break;
             }
+            case BindOp: {
+                BindExpr bindExpr = (BindExpr) e;
+                // Set type of binding to type of its target.
+                this.inferTypes(bindExpr.getTarget(), suggested);
+                bindExpr.setType(bindExpr.getTarget().inferredType());
+                // Update type in bindings map.
+                this.bindings.put(bindExpr.getLabel(), bindExpr.getType());
+                break;
+            }
+            case RefOp: {
+                RefExpr refExpr = (RefExpr) e;
+                // Set type of ref to type of its binding or the suggested type.
+                DataType dataType = this.bindings.get(refExpr.getLabel());
+                if (dataType == null) {
+                    panic(String.format("$%s does not have its type set", refExpr.getLabel()));
+                }
+                refExpr.setType(mostRestrictiveDataType(dataType, suggested));
+                break;
+            }
             case AndOp: {
                 AndExpr andExpr = (AndExpr) e;
+                // Assign most restrictive type to And expression.
                 inferTypes(andExpr.getLeft(), suggested);
                 inferTypes(andExpr.getRight(), suggested);
                 if (doTypesContradict(andExpr.getLeft().inferredType(), andExpr.getRight().inferredType())) {
@@ -193,13 +247,16 @@ public class RuleCompiler {
             }
             case NotOp: {
                 NotExpr notExpr = (NotExpr) e;
+                // Fall back on suggested type, since only type that doesn't match is known.
                 this.inferTypes(notExpr.getInput(), suggested);
                 notExpr.setType(suggested);
                 break;
             }
             case ListOp: {
                 ListExpr t = (ListExpr) e;
+                // Assign most restrictive type to list expression.
                 DataType type = mostRestrictiveDataType(ListDataType, suggested);
+                t.setType(type);
                 int count = t.childCount();
                 for (int i = 0; i < count; i++) {
                     Expr child = t.child(i);
@@ -207,22 +264,8 @@ public class RuleCompiler {
                 }
                 break;
             }
-            case BindOp: {
-                BindExpr bindExpr = (BindExpr) e;
-                this.inferTypes(bindExpr.getTarget(), suggested);
-                bindExpr.setType(bindExpr.getTarget().inferredType());
-                this.bindings.put(bindExpr.getLabel(), bindExpr.getType());
-                break;
-            }
-            case RefOp: {
-                RefExpr refExpr = (RefExpr) e;
-                DataType dataType = this.bindings.get(refExpr.getLabel());
-                if (dataType == null) {
-                    panic(String.format("$%s does not have its type set", refExpr.getLabel()));
-                }
-                refExpr.setType(mostRestrictiveDataType(dataType, suggested));
-                break;
-            }
+
+
             case AnyOp: {
                 AnyExpr anyExpr = (AnyExpr) e;
                 anyExpr.setType(suggested);
@@ -233,6 +276,7 @@ public class RuleCompiler {
             case ListAnyOp:
             case NameOp:
             case NamesOp:
+                // Type already known; nothing to infer.
                 return;
             default:
                 panic(String.format("unhandled expression: %s", e));

@@ -14,22 +14,17 @@ import java.util.List;
 @EqualsAndHashCode
 public class FuncExpr extends Expr {
     Expr name;
-  private   SliceExpr args = new SliceExpr();
+  private final   SliceExpr args ;
     DataType type;
     SourceLoc sourceLoc;
 
-    public FuncExpr(SourceLoc sourceLoc, Expr name) {
-        super(Operator.FuncOp);
-        this.name = name;
-        this.sourceLoc = sourceLoc;
-    }
+
 
     public FuncExpr(SourceLoc source, Expr funcName, SliceExpr args) {
-        this(source, funcName);
+        super(Operator.FuncOp);
+        this.name = funcName;
+        this.sourceLoc = source;
         this.args = args;
-        if (funcName instanceof NamesExpr){
-            System.out.println();
-        }
     }
 
     @Override
@@ -65,9 +60,6 @@ public class FuncExpr extends Expr {
         return type;
     }
 
-    public void append(Expr arg) {
-        args.append(arg);
-    }
 
     @Override
     public SourceLoc source() {

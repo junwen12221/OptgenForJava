@@ -59,6 +59,10 @@ public class DefineSetExpr extends Expr {
         }
         return this;
     }
+
+    public void append(DefineSetExpr lookupMatchingDefines) {
+        set.addAll(lookupMatchingDefines.getSet());
+    }
 //
 //    public DefineSetExpr withTag(String tag) {
 //        int count = this.childCount();

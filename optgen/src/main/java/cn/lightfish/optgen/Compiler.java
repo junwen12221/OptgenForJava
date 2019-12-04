@@ -9,6 +9,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+
+// Compiler compiles Optgen language input files and builds a CompiledExpr
+// result from them. Compilation consists of scanning/parsing the files, which
+// produces an AST, and is followed by semantic analysis and limited rewrites
+// on the AST which the compiler performs.
 public class Compiler {
 
     final Parser parser;
@@ -28,14 +33,25 @@ public class Compiler {
         return new Compiler(Parser.createFromText(list));
     }
 
+    // NewCompiler constructs a new instance of the Optgen compiler, with the
+    // specified list of file paths as its input files. The Compile method
+    // must be called in order to compile the input files.
     public static Compiler createFromFileName(List<String> list) {
         return new Compiler(Parser.createFromFileName(list));
     }
 
+    // SetFileResolver overrides the default method of opening input files. The
+    // default resolver will use os.Open to open input files from disk. Callers
+    // can use this method to open input files in some other way.
     public void setFileResolver(Function<String, String> resolver) {
         parser.setFileResolver(resolver);
     }
 
+    /**
+     * Compile parses and compiles the input files and returns the resulting
+     * are returned by the Errors function.
+     * @return
+     */
     public CompiledExpr complie() {
         RootExpr root = parser.parse();
         if (root == null) {
@@ -57,26 +73,30 @@ public class Compiler {
 
         int count = rules.childCount();
         for (int i = 0; i < count; i++) {
-            RuleExpr rule = (RuleExpr)rules.child(i);
-
-            if (unique.containsKey(rule.getName())){
-                addErr(rule.source(),String.format("duplicate rule name '%s'",rule.getName().value()));
+            RuleExpr rule = (RuleExpr) rules.child(i);
+            // Ensure that rule names are unique.
+            if (unique.containsKey(rule.getName())) {
+                addErr(rule.source(), String.format("duplicate rule name '%s'", rule.getName().value()));
             }
-            unique.put(rule.getName(),true);
+            unique.put(rule.getName(), true);
 
-            new RuleCompiler().compile(this,rule);
+            new RuleCompiler().compile(this, rule);
         }
         RuleSetExpr ruleSetExpr = this.compiled.rules;
         int childCount = ruleSetExpr.childCount();
+
+
+        // Index compiled rules by the op that they match at the top-level of the
+        // rule.
         for (int i = 0; i < childCount; i++) {
-            RuleExpr rule = (RuleExpr)ruleSetExpr.child(i);
+            RuleExpr rule = (RuleExpr) ruleSetExpr.child(i);
             String name = rule.getMatch().singleName();
             RuleSetExpr ruleSetExpr1 = compiled.matchIndex.get(name);
-            if (ruleSetExpr1 == null){
+            if (ruleSetExpr1 == null) {
                 ruleSetExpr1 = new RuleSetExpr();
             }
             ruleSetExpr1.append(rule);
-            compiled.matchIndex.put(name,ruleSetExpr1);
+            compiled.matchIndex.put(name, ruleSetExpr1);
         }
         return errors.isEmpty();
     }
@@ -90,7 +110,7 @@ public class Compiler {
         for (int i = 0; i < count; i++) {
             DefineExpr define = defines.child(i);
             StringExpr name = define.getName();
-
+            // Record the define in the index for fast lookup.
             if (compiled.defineIndex.containsKey(name.value())) {
                 addErr(define.source(), String.format("duplicate '%s' define statement", name));
             }
@@ -98,6 +118,8 @@ public class Compiler {
 
             TagsExpr tags = define.getTags();
             int count1 = tags.childCount();
+
+            // Determine unique set of tags.
             for (int j = 0; j < count1; j++) {
                 TagExpr child = tags.child(j);
                 if (!unique.containsKey(child)) {

@@ -1,5 +1,11 @@
 package cn.lightfish.optgen;
 
+import cn.lightfish.optgen.ast.DefineExpr;
+import cn.lightfish.optgen.ast.StringExpr;
+
+import java.util.HashMap;
+import java.util.Map;
+
 public interface DataType {
     public static DataType AnyDataType = new ExternalDataType("<any>");
     public static DataType ListDataType = new ExternalDataType("<list>");
@@ -36,7 +42,27 @@ public interface DataType {
             return false;
         }
         if (dt1 instanceof DefineSetDataType){
+            if (dt2 instanceof DefineSetDataType){
 
+                if(((DefineSetDataType) dt2).defines.childCount()>((DefineSetDataType) dt1).defines.childCount()){
+                    DataType tmp = dt2;
+                    dt2 = dt1;
+                    dt1 = tmp;
+                }
+                Map<StringExpr,Boolean> map =  new HashMap<>();
+
+                for (DefineExpr defineExpr : ((DefineSetDataType) dt1).defines.getSet()) {
+                    map.put(defineExpr.getName(),true);
+                }
+                for (DefineExpr defineExpr : ((DefineSetDataType) dt2).defines.getSet()) {
+                    if(!map.get(defineExpr.getName())){
+                        return true;
+                    }
+                }
+                return false;
+            }else if (dt2 instanceof ExternalDataType){
+                return dt2.isBuiltinType();
+            }
         }else if (dt1 instanceof ExternalDataType){
             if (dt2 instanceof DefineSetDataType){
                 return dt1.isBuiltinType();

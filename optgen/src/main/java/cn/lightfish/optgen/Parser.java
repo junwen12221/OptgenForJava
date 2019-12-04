@@ -411,17 +411,17 @@ public class Parser {
         if (name == null) {
             return null;
         }
-        FuncExpr fn = new FuncExpr(src, name);
+        SliceExpr sliceExpr = new SliceExpr();
         for (; ; ) {
             if (scan() == Token.RPAREN) {
-                return fn;
+                return new FuncExpr(src, name,sliceExpr);
             }
             unscan();
             Expr arg = parseArg();
             if (arg==null){
                 return null;
             }
-            fn.append(arg);
+            sliceExpr.append(arg);
         }
     }
 

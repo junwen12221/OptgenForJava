@@ -22,6 +22,7 @@ public class CustomFuncExpr extends Expr {
         this.name = funcName;
         this.args = args;
         sourceLoc = source;
+        assert args.childCount()>0;
     }
 
     @Override

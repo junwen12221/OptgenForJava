@@ -7,10 +7,25 @@ import lombok.Data;
 import java.text.MessageFormat;
 import java.util.List;
 
+/**
+ * ruleContentCompiler is the workhorse of rule compilation. It is recursively
+ * constructed on the stack in order to keep scoping context for match and
+ * construct expressions. Semantics can change depending on the context.
+ */
 public class RuleContentCompiler {
     RuleCompiler complier;
+
+    // src is the source location of the nearest match or construct expression,
+    // and is used when the source location isn't otherwise available.
     SourceLoc src;
+
+    // matchPattern is true when compiling in the scope of a match pattern, and
+    // false when compiling in the scope of a replace pattern.
     boolean matchPattern = false;
+
+    // customFunc is true when compiling in the scope of a custom match or
+    // replace function, and false when compiling in the scope of an op matcher
+    // or op constructor.
     boolean customFunc = false;
 
     public RuleContentCompiler(RuleCompiler compiler, SourceLoc source, boolean matchPattern) {
@@ -45,6 +60,8 @@ public class RuleContentCompiler {
     }
 
     public Expr compile(Expr e) {
+        // Recurse into match or construct operator separately, since they will need
+        // to ceate new context before visiting arguments.
         switch (e.op()) {
             case FuncOp:
                 return compileFunc((FuncExpr) e);
@@ -54,6 +71,7 @@ public class RuleContentCompiler {
                 if (matchPattern && !customFunc) {
                     this.addDisallowedErr(e, "cannot use variable references");
                 } else {
+                    // Check that referenced variable exists.
                     RefExpr e1 = (RefExpr) e;
                     if (!this.complier.bindings.containsKey(e1.getLabel())) {
                         this.addErr(e, String.format("unrecognized variable name '%s'", e1.getLabel()));
@@ -95,6 +113,7 @@ public class RuleContentCompiler {
                 break;
             }
         }
+        // Pre-order traversal.
         return e.visit(new VisitFunc() {
             @Override
             public Expr apply(Expr e) {
@@ -105,6 +124,7 @@ public class RuleContentCompiler {
 
 
     private Expr compileBind(BindExpr bind) {
+        // Ensure that binding labels are unique.
         DataType dataType = this.complier.bindings.get(bind.getLabel());
         if (dataType!=null){
             addErr(bind,String.format("duplicate bind label '%s'",bind.getLabel()));
@@ -138,16 +158,19 @@ public class RuleContentCompiler {
         }
     }
     private Expr compileFunc(FuncExpr fn) {
-        RuleContentCompiler nestd = new RuleContentCompiler(this.complier,fn.source(),this.matchPattern);
+        RuleContentCompiler nested = new RuleContentCompiler(this.complier,fn.source(),this.matchPattern);
 
         Expr funcName = fn.getName();
 
         if (funcName instanceof FuncExpr){
+            // Function name is itself a function that dynamically determines name.
             if (matchPattern){
                 addErr(fn,("cannot match dynamic name"));
             }
             funcName = compileFunc((FuncExpr)funcName);
         }else {
+            // Ensure that all function names are defined and check whether this is a
+            // custom match function invocation.
             CheckNamesRes checkNamesRes = checkNames(fn);
             if (!checkNamesRes.ok){
                 return null;
@@ -166,7 +189,9 @@ public class RuleContentCompiler {
                 NameExpr name = names.child(i);
                 DefineSetExpr defines = this.complier.compiled.lookupMatchingDefines(name.value());
                 if (defines!=null){
-
+                    // Ensure that each operator has at least as many operands as the
+                    // given function has arguments. The types of those arguments must
+                    // be the same across all the operators.
                     int count1 = defines.childCount();
                     for (int j = 0; j < count1; j++) {
                         DefineExpr define = defines.child(j);
@@ -175,6 +200,8 @@ public class RuleContentCompiler {
                             continue;
                         }
                         if (prototype == null){
+                            // Save the first define in order to compare it against all
+                            // others.
                             prototype = define;
                             continue;
                         }
@@ -190,31 +217,38 @@ public class RuleContentCompiler {
                         }
                     }
                 }else {
+                    // This must be an invocation of a custom function, because there is
+                    // no matching define.
                     if(names.childCount()!=1){
                         addErr(fn,"custom function cannot have multiple names");
                         return fn;
                     }
+                    // Handle built-in functions.
                     if ("OpName".equals(name.value())){
                         CompileOpNameRes compileOpNameRes = this.compileOpName(fn);
                         if(compileOpNameRes.ok){
                             return compileOpNameRes.fn;
                         }
+                        // Fall through and create OpName as a CustomFuncExpr. It may
+                        // be rewritten during type inference if it can be proved it
+                        // always constructs a single operator.
                     }
-                    nestd.customFunc = true;
+                    nested.customFunc = true;
                 }
             }
         }
-        if (this.matchPattern&&this.customFunc&&!nestd.customFunc){
+        if (this.matchPattern&&this.customFunc&&!nested.customFunc){
             addErr(fn,"custom function name cannot be an operator name");
             return fn;
         }
         SliceExpr args = (SliceExpr)fn.getArgs().visit(e -> {
-            return nestd.compile(e);
+            return nested.compile(e);
         });
-        if (nestd.customFunc){
+        if (nested.customFunc){
            assert   args.child(0) != null;
             return new CustomFuncExpr(funcName,args,fn.source());
         }
+//        assert funcName instanceof NamesExpr || funcName instanceof NameExpr;
         return new FuncExpr(fn.source(),funcName,args);
     }
 
@@ -224,6 +258,10 @@ public class RuleContentCompiler {
         boolean ok;
     }
 
+    // checkNames ensures that all function names are valid operator names or tag
+// names, and that they are legal in the current context. checkNames returns
+// the list of names as a NameExpr, as well as a boolean indicating whether they
+// passed all validity checks.
     private CheckNamesRes checkNames(FuncExpr fn) {
         Expr expr = fn.getName();
         NamesExpr names;
@@ -233,8 +271,10 @@ public class RuleContentCompiler {
             names = new NamesExpr();
             names.append((NameExpr)expr);
         }else {
+            // Name dynamically derived by function.
             return new CheckNamesRes(new NamesExpr(),false);
         }
+        // Don't allow replace pattern to have multiple names or a tag name.
         if (!matchPattern){
             if (names.childCount()!=1){
                 addErr(fn,"constructor cannot have multiple names");
@@ -243,6 +283,7 @@ public class RuleContentCompiler {
 
             DefineSetExpr defines = this.complier.compiled.lookupMatchingDefines(names.child(0).value());
             if (defines==null||defines.childCount()==0){
+                // Must be custom function name.
                 return new CheckNamesRes(names,true);
             }
 
@@ -261,10 +302,12 @@ public class RuleContentCompiler {
             return new CompileOpNameRes(fn,false);
         }
         if (fn.getArgs().childCount()==0){
-            NameExpr opName = complier.opName;
+            // No args to OpName function refers to top-level match operator.
+            NameExpr opName = this.complier.opName;
             return new CompileOpNameRes(new NameExpr(opName.value()),true);
         }
         Expr child = fn.getArgs().child(0);
+        // Otherwise expect a single variable reference argument.
         if (!(child instanceof RefExpr)){
             addErr(fn,("invalid OpName argument: argument must be a variable reference"));
             return new CompileOpNameRes(fn,false);
