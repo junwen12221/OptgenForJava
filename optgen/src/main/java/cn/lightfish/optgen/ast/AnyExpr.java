@@ -37,6 +37,11 @@ public class AnyExpr extends Expr {
     }
 
     @Override
+    public SourceLoc source() {
+        return sourceLoc;
+    }
+
+    @Override
     public DataType inferredType() {
         return type;
     }

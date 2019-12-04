@@ -74,7 +74,7 @@ public class RuleContentCompiler {
                     // Check that referenced variable exists.
                     RefExpr e1 = (RefExpr) e;
                     if (!this.complier.bindings.containsKey(e1.getLabel())) {
-                        this.addErr(e, String.format("unrecognized variable name '%s'", e1.getLabel()));
+                        this.addErr(e, String.format("unrecognized variable name '%s'", e1.getLabel().value()));
                     }
                 }
                 break;
@@ -97,11 +97,11 @@ public class RuleContentCompiler {
             case NameOp:{
                 NameExpr t = (NameExpr) e;
                 if (matchPattern && !customFunc) {
-                    this.addDisallowedErr(e, "cannot use boolean expressions");
+                    this.addErr(e, String.format("cannot match literal name '%s'",t.value()));
                 }else{
                     DefineExpr define = this.complier.compiled.lookupDefine(t.value());
                     if (define == null){
-                        addErr(t, MessageFormat.format("%s is not an operator name",t));
+                        addErr(t, String.format("%s is not an operator name",t.value()));
                     }
                 }
                 break;
@@ -127,7 +127,7 @@ public class RuleContentCompiler {
         // Ensure that binding labels are unique.
         DataType dataType = this.complier.bindings.get(bind.getLabel());
         if (dataType!=null){
-            addErr(bind,String.format("duplicate bind label '%s'",bind.getLabel()));
+            addErr(bind,String.format("duplicate bind label '%s'",bind.getLabel().value()));
         }
 
         this.complier.bindings.put(bind.getLabel(),DataType.AnyDataType);
@@ -141,9 +141,11 @@ public class RuleContentCompiler {
 
     private void compileList(ListExpr e) {
         boolean foundNotAny = false;
-        int count = e.childCount();
+
+        Expr items = e.child(0);
+        int count = items.childCount();
         for (int i = 0; i < count; i++) {
-            Expr item = e.child(i);
+            Expr item = items.child(i);
             if (item.op() == Operator.ListAnyOp){
                 if (!matchPattern){
                     addErr(e,"list constructor cannot use '...'");
