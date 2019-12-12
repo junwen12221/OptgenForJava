@@ -3,6 +3,7 @@ package cn.lightfish.optgen.ast;
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
 import cn.lightfish.optgen.SourceLoc;
+import cn.lightfish.optgen.gen.PatternVisitor;
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode
@@ -12,6 +13,11 @@ public class ListAnyExpr extends Expr {
     public ListAnyExpr(SourceLoc sourceLoc) {
         super(Operator.ListAnyOp);
         this.sourceLoc = sourceLoc;
+    }
+
+    @Override
+    public <T> T accept(PatternVisitor visitor) {
+        return visitor.visit(this);
     }
 
     @Override
@@ -25,7 +31,7 @@ public class ListAnyExpr extends Expr {
     }
 
     @Override
-    public Expr visit(VisitFunc visit) {
+    public Expr visit(ExprVisitFunc visit) {
         return this;
     }
 }

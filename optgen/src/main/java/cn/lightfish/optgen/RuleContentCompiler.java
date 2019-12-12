@@ -4,7 +4,6 @@ import cn.lightfish.optgen.ast.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.text.MessageFormat;
 import java.util.List;
 
 /**
@@ -114,7 +113,7 @@ public class RuleContentCompiler {
             }
         }
         // Pre-order traversal.
-        return e.visit(new VisitFunc() {
+        return e.visit(new ExprVisitFunc() {
             @Override
             public Expr apply(Expr e) {
                 return RuleContentCompiler.this.compile(e);
@@ -131,7 +130,7 @@ public class RuleContentCompiler {
         }
 
         this.complier.bindings.put(bind.getLabel(),DataType.AnyDataType);
-        return bind.visit(new VisitFunc() {
+        return bind.visit(new ExprVisitFunc() {
             @Override
             public Expr apply(Expr e) {
                 return RuleContentCompiler.this.compile(e);

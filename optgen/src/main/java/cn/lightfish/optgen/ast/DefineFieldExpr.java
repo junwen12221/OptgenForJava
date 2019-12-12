@@ -3,9 +3,9 @@ package cn.lightfish.optgen.ast;
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
 import cn.lightfish.optgen.SourceLoc;
+import cn.lightfish.optgen.gen.PatternVisitor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import org.omg.CORBA.Any;
 
 import java.util.List;
 @Getter
@@ -29,6 +29,11 @@ public class DefineFieldExpr extends Expr {
     @Override
     public int childCount() {
         return 3;
+    }
+
+    @Override
+    public <T> T accept(PatternVisitor visitor) {
+        return visitor.visit(this);
     }
 
     @Override
@@ -67,7 +72,7 @@ public class DefineFieldExpr extends Expr {
     }
 
     @Override
-    public Expr visit(VisitFunc visit) {
+    public Expr visit(ExprVisitFunc visit) {
         List<Expr> exprs = visitChildren(this, visit);
         if (exprs!=null){
             return new DefineFieldExpr(source(),name,commentExpr,type);

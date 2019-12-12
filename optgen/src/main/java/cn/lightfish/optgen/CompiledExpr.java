@@ -4,6 +4,7 @@ import cn.lightfish.optgen.ast.DefineExpr;
 import cn.lightfish.optgen.ast.DefineSetExpr;
 import cn.lightfish.optgen.ast.Expr;
 import cn.lightfish.optgen.ast.RuleSetExpr;
+import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,7 +15,8 @@ import java.util.Map;
 // CompiledExpr is the result of Optgen scanning, parsing, and semantic
 // analysis. It contains the set of definitions and rules that were compiled
 // from the Optgen input files.
-public class CompiledExpr {
+@Data
+public class CompiledExpr{
     DefineSetExpr defines;
     RuleSetExpr rules = new RuleSetExpr();
     List<String> defineTags = new ArrayList<>();

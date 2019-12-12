@@ -138,4 +138,8 @@ public class Compiler {
             errors.add(err);
         }
     }
+
+    public List<String> getErrors() {
+        return errors;
+    }
 }

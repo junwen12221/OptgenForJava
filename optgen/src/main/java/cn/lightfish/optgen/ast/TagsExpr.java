@@ -2,7 +2,7 @@ package cn.lightfish.optgen.ast;
 
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
-import cn.lightfish.optgen.SourceLoc;
+import cn.lightfish.optgen.gen.PatternVisitor;
 import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;
@@ -20,6 +20,11 @@ public class TagsExpr extends Expr{
     }
 
     @Override
+    public <T> T accept(PatternVisitor visitor) {
+        return visitor.visit(this);
+    }
+
+    @Override
     public TagExpr child(int n) {
         return tagsExpr.get(n);
     }
@@ -31,7 +36,7 @@ public class TagsExpr extends Expr{
     }
 
     @Override
-    public Expr visit(VisitFunc visit) {
+    public Expr visit(ExprVisitFunc visit) {
         List<Expr> exprs = visitChildren(this, visit);
         if (exprs!=null){
             TagsExpr tagsExpr = new TagsExpr();

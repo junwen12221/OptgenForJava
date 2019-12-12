@@ -3,6 +3,7 @@ package cn.lightfish.optgen.ast;
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
 import cn.lightfish.optgen.SourceLoc;
+import cn.lightfish.optgen.gen.PatternVisitor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -32,6 +33,11 @@ public class RefExpr extends Expr {
     }
 
     @Override
+    public <T> T accept(PatternVisitor visitor) {
+        return visitor.visit(this);
+    }
+
+    @Override
     public Expr child(int n) {
         if (n == 0) {
             return label;
@@ -53,7 +59,7 @@ public class RefExpr extends Expr {
     }
 
     @Override
-    public Expr visit(VisitFunc visit) {
+    public Expr visit(ExprVisitFunc visit) {
         List<Expr> exprs = visitChildren(this, visit);
         if (exprs!=null){
             Expr expr = exprs.get(0);

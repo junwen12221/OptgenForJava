@@ -3,6 +3,7 @@ package cn.lightfish.optgen.ast;
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
 import cn.lightfish.optgen.SourceLoc;
+import cn.lightfish.optgen.gen.PatternVisitor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -22,6 +23,11 @@ public class RootExpr extends Expr {
     @Override
     public int childCount() {
         return 2;
+    }
+
+    @Override
+    public<T> T accept(PatternVisitor visitor) {
+        return visitor.visit(this);
     }
 
     @Override
@@ -53,7 +59,7 @@ public class RootExpr extends Expr {
     }
 
     @Override
-    public Expr visit(VisitFunc visit) {
+    public Expr visit(ExprVisitFunc visit) {
         List<Expr> children = visitChildren(this, visit);
         if (children != null) {
             RootExpr rootExpr = new RootExpr();

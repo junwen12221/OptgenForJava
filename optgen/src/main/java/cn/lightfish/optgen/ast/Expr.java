@@ -1,9 +1,7 @@
 package cn.lightfish.optgen.ast;
 
-import cn.lightfish.optgen.DataType;
-import cn.lightfish.optgen.Operator;
-import cn.lightfish.optgen.RuleContentCompiler;
-import cn.lightfish.optgen.SourceLoc;
+import cn.lightfish.optgen.*;
+import cn.lightfish.optgen.gen.PatternVisitor;
 import lombok.SneakyThrows;
 
 import java.text.MessageFormat;
@@ -31,6 +29,8 @@ public abstract class Expr {
         return null;
     }
 
+   public   abstract  <T> T accept(PatternVisitor visitor);
+
     public  String childName(int n){
         return "";
     }
@@ -49,7 +49,7 @@ public abstract class Expr {
         format(this, buff, level);
     }
 
-    public abstract Expr visit(VisitFunc visit);
+    public abstract Expr visit(ExprVisitFunc visit);
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
         format(this, stringBuilder, 0);
@@ -166,7 +166,7 @@ public abstract class Expr {
         throw new IllegalArgumentException(MessageFormat.format(format, args));
     }
 
-    public List<Expr> visitChildren(Expr e,VisitFunc visit){
+    public List<Expr> visitChildren(Expr e, ExprVisitFunc visit){
         List<Expr> children = null;
 
         int count = e.childCount();

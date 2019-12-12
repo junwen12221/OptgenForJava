@@ -3,6 +3,7 @@ package cn.lightfish.optgen.ast;
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
 import cn.lightfish.optgen.SourceLoc;
+import cn.lightfish.optgen.gen.PatternVisitor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -27,6 +28,11 @@ public class CustomFuncExpr extends Expr {
     @Override
     public int childCount() {
         return 2;
+    }
+
+    @Override
+    public  <T> T accept(PatternVisitor visitor) {
+        return visitor.visit(this);
     }
 
     @Override
@@ -64,7 +70,7 @@ public class CustomFuncExpr extends Expr {
     }
 
     @Override
-    public Expr visit(VisitFunc visit) {
+    public Expr visit(ExprVisitFunc visit) {
         List<Expr> exprs = visitChildren(this, visit);
         if (exprs != null) {
             return new CustomFuncExpr(exprs.get(0),(SliceExpr) exprs.get(1),source());

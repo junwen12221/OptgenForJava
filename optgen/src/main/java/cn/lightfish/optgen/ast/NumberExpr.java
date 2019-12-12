@@ -2,7 +2,7 @@ package cn.lightfish.optgen.ast;
 
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
-import cn.lightfish.optgen.SourceLoc;
+import cn.lightfish.optgen.gen.PatternVisitor;
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode
@@ -17,6 +17,11 @@ public class NumberExpr extends Expr {
     @Override
     public int childCount() {
         return 0;
+    }
+
+    @Override
+    public<T> T accept(PatternVisitor visitor) {
+        return visitor.visit(this);
     }
 
     @Override
@@ -36,7 +41,7 @@ public class NumberExpr extends Expr {
     }
 
     @Override
-    public Expr visit(VisitFunc visit) {
+    public Expr visit(ExprVisitFunc visit) {
         return this;
     }
 

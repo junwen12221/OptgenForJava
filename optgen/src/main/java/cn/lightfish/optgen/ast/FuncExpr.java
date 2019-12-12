@@ -3,6 +3,7 @@ package cn.lightfish.optgen.ast;
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
 import cn.lightfish.optgen.SourceLoc;
+import cn.lightfish.optgen.gen.PatternVisitor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,10 +15,9 @@ import java.util.List;
 @EqualsAndHashCode
 public class FuncExpr extends Expr {
     Expr name;
-  private final   SliceExpr args ;
+    private final SliceExpr args;
     DataType type;
     SourceLoc sourceLoc;
-
 
 
     public FuncExpr(SourceLoc source, Expr funcName, SliceExpr args) {
@@ -30,6 +30,11 @@ public class FuncExpr extends Expr {
     @Override
     public int childCount() {
         return 2;
+    }
+
+    @Override
+    public <T> T accept(PatternVisitor visitor) {
+        return visitor.visit(this);
     }
 
     @Override
@@ -72,19 +77,19 @@ public class FuncExpr extends Expr {
     }
 
     @Override
-    public Expr visit(VisitFunc visit) {
+    public Expr visit(ExprVisitFunc visit) {
         List<Expr> exprs = visitChildren(this, visit);
-        if (exprs!=null){
-            return new FuncExpr(source(),exprs.get(0),(SliceExpr)exprs.get(1));
+        if (exprs != null) {
+            return new FuncExpr(source(), exprs.get(0), (SliceExpr) exprs.get(1));
         }
         return this;
     }
 
     public boolean hasDynamicName() {
-        if (this.name instanceof NameExpr){
+        if (this.name instanceof NameExpr) {
             return false;
         }
-        if (this.name instanceof NamesExpr){
+        if (this.name instanceof NamesExpr) {
             return false;
         }
         return true;
@@ -103,11 +108,11 @@ public class FuncExpr extends Expr {
     }
 
     public NamesExpr nameChoice() {
-        if (this.name instanceof NamesExpr){
-            return (NamesExpr)this.name;
-        }else {
+        if (this.name instanceof NamesExpr) {
+            return (NamesExpr) this.name;
+        } else {
             NamesExpr namesExpr = new NamesExpr();
-            namesExpr.append((NameExpr)this.name);
+            namesExpr.append((NameExpr) this.name);
             return namesExpr;
         }
     }

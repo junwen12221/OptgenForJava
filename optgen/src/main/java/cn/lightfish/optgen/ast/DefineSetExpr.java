@@ -2,11 +2,14 @@ package cn.lightfish.optgen.ast;
 
 import cn.lightfish.optgen.DataType;
 import cn.lightfish.optgen.Operator;
+import cn.lightfish.optgen.gen.PatternVisitor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static cn.lightfish.optgen.DataType.AnyDataType;
 
 @Data
 @EqualsAndHashCode
@@ -24,6 +27,11 @@ public class DefineSetExpr extends Expr {
     }
 
     @Override
+    public <T> T accept(PatternVisitor visitor) {
+        return visitor.visit(this);
+    }
+
+    @Override
     public DefineExpr child(int n) {
         return set.get(n);
     }
@@ -35,7 +43,7 @@ public class DefineSetExpr extends Expr {
 
     @Override
     public DataType inferredType() {
-        return null;
+        return AnyDataType;
     }
 
     public void append(DefineExpr define) {
@@ -48,7 +56,7 @@ public class DefineSetExpr extends Expr {
     }
 
     @Override
-    public Expr visit(VisitFunc visit) {
+    public Expr visit(ExprVisitFunc visit) {
         List<Expr> children = visitChildren(this, visit);
         if (children != null) {
             DefineSetExpr defineSetExpr = new DefineSetExpr();
