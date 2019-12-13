@@ -2,10 +2,7 @@ package cn.lightfish.optgen;
 
 import cn.lightfish.optgen.ast.*;
 import cn.lightfish.optgen.gen.Matcher;
-import cn.lightfish.optgen.gen.Node;
 import cn.lightfish.optgen.gen.PatternVisitor;
-
-import java.util.Map;
 
 public class VisitorImpl implements PatternVisitor {
     @Override
@@ -129,7 +126,8 @@ public class VisitorImpl implements PatternVisitor {
 
             Expr replace = ruleExpr.getReplace();
             if (replace!=null){
-                replace.accept(boundStatementVisitor);
+                Factory accept = replace.accept(boundStatementVisitor);
+                System.out.println(accept);
             }
 
 

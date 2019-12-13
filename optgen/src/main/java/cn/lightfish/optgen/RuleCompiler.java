@@ -104,7 +104,7 @@ public class RuleCompiler {
         match =(FuncExpr) compiler.compile( match);
 
         compiler = new RuleContentCompiler(this, this.rule.source(), false);
-        System.out.println("-------------------------------replace----------------------------------------");
+       // System.out.println("-------------------------------replace----------------------------------------");
         Expr replace = compiler.compile( rule.getReplace());
 
         RuleExpr ruleExpr = new RuleExpr(rule.getSourceLoc(),

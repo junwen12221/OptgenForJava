@@ -1,11 +1,12 @@
 package cn.lightfish.optgen.gen;
 
 import cn.lightfish.optgen.ast.*;
+import cn.lightfish.optgen.gen.node.FunNode;
 
 public class NodeFactory {
-    public static Node create(DefineExpr expr,Node parent) {
+    public static FunNode create(DefineExpr expr, FunNode parent) {
         StringExpr name = expr.getName();
-        Node node = new Node(parent, name.value(), expr.inferredType().toString());
+        FunNode node = new FunNode(parent, name.value(), expr.inferredType().toString());
         DefineFieldsExpr fields = expr.getFields();
         if (fields != null) {
             int count = fields.childCount();
@@ -15,7 +16,7 @@ public class NodeFactory {
         }
         return node;
     }
-    public Node createMatch(Expr expr) {
+    public FunNode createMatch(Expr expr) {
         if (expr instanceof FuncExpr){
 
         }else if (expr instanceof CustomFuncExpr){
@@ -23,7 +24,7 @@ public class NodeFactory {
         }
         return null;
     }
-    private static Node  create(Node node,DefineFieldExpr child) {
+    private static FunNode create(FunNode node, DefineFieldExpr child) {
         StringExpr name = child.getName();
         StringExpr type = child.getType();
         return null;

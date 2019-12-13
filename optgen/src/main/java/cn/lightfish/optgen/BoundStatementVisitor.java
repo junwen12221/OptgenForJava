@@ -2,20 +2,25 @@ package cn.lightfish.optgen;
 
 import cn.lightfish.optgen.ast.*;
 import cn.lightfish.optgen.gen.Node;
+import cn.lightfish.optgen.gen.node.FunNode;
 import cn.lightfish.optgen.gen.NodeFactory;
 import cn.lightfish.optgen.gen.PatternVisitor;
+import cn.lightfish.optgen.gen.node.ListNode;
+import cn.lightfish.optgen.gen.node.NumberNode;
+import cn.lightfish.optgen.gen.node.StringNode;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class BoundStatementVisitor implements PatternVisitor {
     final NodeFactory factory = new NodeFactory();
     final Map<String,Object> bind = new HashMap<>();
-    final Map<String, Function> customMap = new HashMap<>();
+    final Map<String, BiFunction> customMap = new HashMap<>();
 
     @Override
     public Factory visit(AndExpr andExpr) {
@@ -45,13 +50,21 @@ public class BoundStatementVisitor implements PatternVisitor {
     @Override
     public Factory visit(CustomFuncExpr customFuncExpr) {
         NameExpr name = (NameExpr) customFuncExpr.getName();
-        Function function = customMap.get(name.value());
-        Factory args = customFuncExpr.getArgs().accept(this);
+        BiFunction function = customMap.get(name.value());
+        SliceExpr args = customFuncExpr.getArgs();
+        int count = args.childCount();
+
+        List<Factory> argList = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            argList.add(args.child(i).accept(this));
+        }
         return new Factory() {
             @Override
-            public <T> T create() {
-                Object o1 = args.create();
-                return (T)function.apply(o1);
+            public Node create(Node parent) {
+                List<Node> collect = (List)argList.stream().map(i -> create(null)).collect(Collectors.toList());
+                Node apply = (Node)function.apply(parent, collect);
+                collect.stream().forEach(i->i.setParent(apply));
+                return apply;
             }
         };
     }
@@ -80,8 +93,20 @@ public class BoundStatementVisitor implements PatternVisitor {
     public Factory visit(FuncExpr funcExpr) {
         NameExpr nameExpr = (NameExpr) funcExpr.getName();
         String value = nameExpr.value();
-        Factory accept = funcExpr.getArgs().accept(this);
-        return new Node(,value,"");
+        SliceExpr args = funcExpr.getArgs();
+        int count = args.childCount();
+        List<Factory> arglist = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            arglist.add(args.child(i).accept(this));
+        }
+        return new Factory() {
+            @Override
+            public FunNode create(Node parent) {
+                FunNode funNode = new FunNode(parent,value,"");
+                arglist.stream().map(i->(Node)i.create(funNode)).forEach(funNode::add);
+                return funNode;
+            }
+        };
     }
 
     @Override
@@ -92,46 +117,35 @@ public class BoundStatementVisitor implements PatternVisitor {
     @Override
     public Factory visit(ListExpr listExpr) {
         ArrayList<Factory> list = new ArrayList<>();
-        int count = listExpr.childCount();
+        SliceExpr sliceExpr = (SliceExpr) listExpr.child(0);
+        int count = sliceExpr.childCount();
         for (int i = 0; i < count; i++) {
-            list.add(listExpr.child(i).accept(this));
+            list.add(sliceExpr.child(i).accept(this));
         }
         return new Factory() {
             @Override
-            public List create(Node parent) {
-                return list.stream().map(i->i.create(parent)).collect(Collectors.toList());
+            public Node create(Node parent) {
+                return new ListNode(parent, (List) list.stream().map(i->i.create(parent)).collect(Collectors.toList()));
             }
         };
     }
 
     @Override
     public Factory visit(NameExpr nameExpr) {
-        String value = nameExpr.value();
+        String name = nameExpr.value();
+        Node o = (Node) bind.get(name);
         return new Factory() {
             @Override
-            public String create(Node parent){
-                return value;
+            public Node create(Node parent) {
+                o.setParent(parent);
+                return o;
             }
         };
     }
 
     @Override
     public Factory visit(NamesExpr namesExpr) {
-        int count = namesExpr.childCount();
-        ArrayList<Factory> list = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
-            list.add(namesExpr.child(i).accept(this));
-        }
-        return new Factory() {
-            @Override
-            public List<String> create(Node parent) {
-                List<String> list1 = new ArrayList<>();
-                for (Factory factory1 : list) {
-                    list1.add(factory1.create());
-                }
-                return list1;
-            }
-        };
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -144,8 +158,8 @@ public class BoundStatementVisitor implements PatternVisitor {
         Long value = numberExpr.value();
         return new Factory() {
             @Override
-            public Long create(Node parent) {
-                return value;
+            public NumberNode create(Node parent) {
+                return new NumberNode(parent,value);
             }
         };
     }
@@ -178,17 +192,18 @@ public class BoundStatementVisitor implements PatternVisitor {
 
     @Override
     public Factory visit(SliceExpr sliceExpr) {
-        int count = sliceExpr.childCount();
-        ArrayList<Factory> list = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
-            list.add(sliceExpr.child(i).accept(this));
-        }
-        return new Factory() {
-            @Override
-            public List create(Node parent) {
-                return list.stream().map(i->i.create()).collect(Collectors.toList());
-            }
-        };
+        throw new UnsupportedOperationException();
+//        int count = sliceExpr.childCount();
+//        ArrayList<Factory> list = new ArrayList<>();
+//        for (int i = 0; i < count; i++) {
+//            list.add(sliceExpr.child(i).accept(this));
+//        }
+//        return new Factory() {
+//            @Override
+//            public List create(Node parent) {
+//                return list.stream().map(i->i.create()).collect(Collectors.toList());
+//            }
+//        };
     }
 
     @Override
@@ -196,8 +211,8 @@ public class BoundStatementVisitor implements PatternVisitor {
         String value = stringExpr.value();
         return new Factory() {
             @Override
-            public String create(Node parent){
-                return value;
+            public StringNode create(Node parent){
+                return new StringNode(parent,value);
             }
         };
     }

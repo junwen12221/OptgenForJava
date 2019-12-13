@@ -2,8 +2,10 @@ package cn.lightfish.optgen;
 
 import cn.lightfish.optgen.ast.*;
 import cn.lightfish.optgen.gen.Matcher;
-import cn.lightfish.optgen.gen.Node;
+import cn.lightfish.optgen.gen.node.FunNode;
 import cn.lightfish.optgen.gen.PatternVisitor;
+import cn.lightfish.optgen.gen.node.ListNode;
+import cn.lightfish.optgen.gen.node.NumberNode;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -94,9 +96,9 @@ public class MatchVisitor implements PatternVisitor {
         }
         String type = funcExpr.getType().toString();
         return arg -> {
-            if (arg instanceof Node) {
-                Node node = (Node) arg;
-                return name.match(arg) && type.equals(node.getType()) && argsExpr.match(((Node) arg).getValueIndex());
+            if (arg instanceof FunNode) {
+                FunNode node = (FunNode) arg;
+                return name.match(arg) && type.equals(node.getType()) && argsExpr.match(((FunNode) arg).getValueIndex());
             } else {
                 return false;
             }
@@ -111,11 +113,12 @@ public class MatchVisitor implements PatternVisitor {
     @Override
     public Matcher visit(ListExpr listExpr) {
         int count = listExpr.childCount();
+        SliceExpr items = (SliceExpr)listExpr.child(0);
         boolean isFirst = false;
         boolean isLast = false;
         Expr matchItem = null;
-        for (int i = 0; i < count; i++) {
-            Expr child = listExpr.child(i);
+        for (int i = 0; i < items.childCount(); i++) {
+            Expr child = items.child(i);
             if (child.op() != Operator.ListAnyOp) {
                 matchItem = child;
                 if (i == 0) {
@@ -154,8 +157,8 @@ public class MatchVisitor implements PatternVisitor {
                     throw new UnsupportedOperationException();
                 }
                 return arg -> {
-                    if (arg instanceof List) {
-                        return ((List) arg).size() != 1;
+                    if (arg instanceof ListNode) {
+                        return ((ListNode) arg).getList().size() != 1;
                     }
                     return false;
                 };
@@ -194,7 +197,7 @@ public class MatchVisitor implements PatternVisitor {
             }
             ArrayList<Matcher> list = new ArrayList<>();
             for (int i = 0; i < count; i++) {
-                list.add(listExpr.child(i).accept(this));
+                list.add(items.child(i).accept(this));
             }
             return arg -> {
                 if (arg instanceof List) {
@@ -220,11 +223,11 @@ public class MatchVisitor implements PatternVisitor {
     @Override
     public Matcher visit(NamesExpr namesExpr) {
         return arg -> {
-            if (arg instanceof List) {
-                List list = (List) arg;
-                if (list.size() == namesExpr.childCount()) {
-                    for (int i = 0; i < list.size(); i++) {
-                        if (!namesExpr.child(i).value().equals(list.get(i))) {
+            if (arg instanceof ListNode) {
+                ListNode list = (ListNode) arg;
+                if (list.getList().size() == namesExpr.childCount()) {
+                    for (int i = 0; i < list.getList().size(); i++) {
+                        if (!namesExpr.child(i).value().equals(list.getList().get(i))) {
                             return false;
                         }
                     }
@@ -243,7 +246,12 @@ public class MatchVisitor implements PatternVisitor {
     @Override
     public Matcher visit(NumberExpr numberExpr) {
         Long value = numberExpr.value();
-        return arg -> value.equals(arg);
+        return obj -> {
+            if (obj instanceof NumberNode ){
+                return value.equals(((NumberNode) obj).getValue());
+            }
+            return false;
+        };
     }
 
     @Override
@@ -268,27 +276,7 @@ public class MatchVisitor implements PatternVisitor {
 
     @Override
     public Matcher visit(SliceExpr sliceExpr) {
-        int count = sliceExpr.childCount();
-        ArrayList<Matcher> matchers = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
-            Matcher accept = sliceExpr.child(i).accept(this);
-            matchers.add(accept);
-        }
-        return arg -> {
-            if (arg instanceof List) {
-                List list1 = (List) arg;
-                if (list1.size() == matchers.size())
-                    for (int i = 0; i < list1.size(); i++) {
-                        Object o = list1.get(i);
-                        if (!matchers.get(i).match(o)) {
-                            return false;
-                        }
-                    }
-                return true;
-            } else {
-                return false;
-            }
-        };
+     return null;
     }
 
     @Override
