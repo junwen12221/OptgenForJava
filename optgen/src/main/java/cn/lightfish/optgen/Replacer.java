@@ -1,6 +1,8 @@
 package cn.lightfish.optgen;
 
+import cn.lightfish.optgen.gen.Node;
+
 @FunctionalInterface
 public interface Replacer {
-    boolean replace(Object o);
+    Node replace(Node o);
 }

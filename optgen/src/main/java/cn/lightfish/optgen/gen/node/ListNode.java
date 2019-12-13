@@ -5,6 +5,7 @@ import cn.lightfish.optgen.gen.Node;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ListNode extends Node {
@@ -41,5 +42,15 @@ public class ListNode extends Node {
         } else {
             return childrenStream;
         }
+    }
+
+    @Override
+    public String toString() {
+        return this.list.stream().map(i->i.toString()).collect(Collectors.joining(",","[","]"));
+    }
+
+    @Override
+    public void replace(Node next, Object o) {
+      list.set( list.indexOf(next),(Node) o);
     }
 }

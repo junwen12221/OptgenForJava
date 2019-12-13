@@ -18,4 +18,14 @@ public class StringNode extends Node {
     public String getType() {
         return "";
     }
+
+    @Override
+    public String toString() {
+        return "\""+value+"\"";
+    }
+
+    @Override
+    public void replace(Node next, Object o) {
+
+    }
 }

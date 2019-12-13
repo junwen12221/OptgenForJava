@@ -2,6 +2,7 @@ package cn.lightfish.optgen.gen;
 
 import cn.lightfish.optgen.CompiledExpr;
 import cn.lightfish.optgen.Compiler;
+import cn.lightfish.optgen.Replacer;
 import cn.lightfish.optgen.VisitorImpl;
 import cn.lightfish.optgen.ast.DefineSetExpr;
 import cn.lightfish.optgen.ast.RuleSetExpr;
@@ -32,18 +33,8 @@ public class Main {
                                 Map<String, RuleSetExpr> matchIndex = complied.getMatchIndex();
                                 RuleSetExpr rules = complied.getRules();
                                 VisitorImpl visitor = new VisitorImpl();
-                                Matcher accept = rules.accept(visitor);
-                                if (complied != null) {
-                                    System.out.println("------------------------------------------");
-                                    return complied.toString();
-
-                                } else {
-                                    StringBuilder stringBuilder = new StringBuilder();
-                                    for (String error : c.getErrors()) {
-                                        stringBuilder.append(error).append('\n');
-                                    }
-                                    return stringBuilder.toString();
-                                }
+                                Replacer replacer = rules.accept(visitor);
+                                return null;
                             }catch (Exception e){
                                 e.printStackTrace();
                                 return "";

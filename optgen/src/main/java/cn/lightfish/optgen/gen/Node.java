@@ -6,12 +6,13 @@ import cn.lightfish.optgen.gen.node.Order;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-public abstract class Node {
+public abstract class Node{
     public void setParent(Node parent) {
         this.parent = parent;
     }
 
     Node parent;
+
 
     public Node(Node parent) {
         this.parent = parent;
@@ -27,4 +28,10 @@ public abstract class Node {
     public Stream<Node> stream(Predicate<Node> predicate, Order order){
         return predicate.test(this)?Stream.of(this):Stream.empty();
     }
+
+    public Node getParent() {
+        return parent;
+    }
+
+    public abstract void replace(Node next, Object o);
 }

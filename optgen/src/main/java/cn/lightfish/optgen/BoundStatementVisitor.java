@@ -18,9 +18,13 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class BoundStatementVisitor implements PatternVisitor {
-    final NodeFactory factory = new NodeFactory();
-    final Map<String,Object> bind = new HashMap<>();
+    final Map<String,Object> bind ;
     final Map<String, BiFunction> customMap = new HashMap<>();
+
+    public BoundStatementVisitor(MatchVisitor matchVisitor) {
+
+        this.bind = matchVisitor.bind;
+    }
 
     @Override
     public Factory visit(AndExpr andExpr) {
@@ -103,7 +107,10 @@ public class BoundStatementVisitor implements PatternVisitor {
             @Override
             public FunNode create(Node parent) {
                 FunNode funNode = new FunNode(parent,value,"");
-                arglist.stream().map(i->(Node)i.create(funNode)).forEach(funNode::add);
+                for (Factory i : arglist) {
+                    Node node = i.create(funNode);
+                    funNode.add(node);
+                }
                 return funNode;
             }
         };

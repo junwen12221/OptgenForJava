@@ -2,7 +2,11 @@ package cn.lightfish.optgen;
 
 import cn.lightfish.optgen.ast.*;
 import cn.lightfish.optgen.gen.Matcher;
+import cn.lightfish.optgen.gen.Node;
 import cn.lightfish.optgen.gen.PatternVisitor;
+import cn.lightfish.optgen.gen.node.Order;
+
+import java.util.Iterator;
 
 public class VisitorImpl implements PatternVisitor {
     @Override
@@ -121,17 +125,34 @@ public class VisitorImpl implements PatternVisitor {
             System.out.println(match);
             Matcher matcher = match.accept(matchVisitor);
 
-            BoundStatementVisitor boundStatementVisitor = new BoundStatementVisitor();
+            BoundStatementVisitor boundStatementVisitor = new BoundStatementVisitor(matchVisitor);
 
 
             Expr replace = ruleExpr.getReplace();
-            if (replace!=null){
+            if (replace != null) {
                 Factory accept = replace.accept(boundStatementVisitor);
                 System.out.println(accept);
+                Replacer replacer = new Replacer() {
+                    @Override
+                    public Node replace(Node o) {
+                            Iterator<Node> iterator = o.stream(Order.PREFIX).iterator();
+                            while (iterator.hasNext()) {
+                                Node next = iterator.next();
+                                if (matcher.match(next)) {
+                                    Node parent = next.getParent();
+                                    if (parent == null&&next == o){
+                                        return accept.create(parent);
+                                    }
+                                    if (parent!=null&&next!=o){
+                                        parent.replace(next,accept.create(parent) );
+                                    }
+                                }
+                            }
+                            return o;
+                    }
+                };
+                return (T)replacer;
             }
-
-
-            return null;
         }
 
         return null;

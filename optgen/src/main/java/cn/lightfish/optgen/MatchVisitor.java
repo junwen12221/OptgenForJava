@@ -2,6 +2,7 @@ package cn.lightfish.optgen;
 
 import cn.lightfish.optgen.ast.*;
 import cn.lightfish.optgen.gen.Matcher;
+import cn.lightfish.optgen.gen.Node;
 import cn.lightfish.optgen.gen.node.FunNode;
 import cn.lightfish.optgen.gen.PatternVisitor;
 import cn.lightfish.optgen.gen.node.ListNode;
@@ -90,7 +91,13 @@ public class MatchVisitor implements PatternVisitor {
     @Override
     public Matcher visit(FuncExpr funcExpr) {
         Matcher name = funcExpr.getName().accept(this);
-        Matcher argsExpr = funcExpr.getArgs().accept(this);
+        SliceExpr args = funcExpr.getArgs();
+        int count = args.childCount();
+        List<Matcher> argMatchers = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            Expr child = args.child(i);
+            argMatchers.add(child.accept(this));
+        }
         if (this.noMatch && funcExpr.getArgs().childCount() != 0) {
             throw new UnsupportedOperationException();
         }
@@ -98,7 +105,20 @@ public class MatchVisitor implements PatternVisitor {
         return arg -> {
             if (arg instanceof FunNode) {
                 FunNode node = (FunNode) arg;
-                return name.match(arg) && type.equals(node.getType()) && argsExpr.match(((FunNode) arg).getValueIndex());
+                boolean match = name.match(((FunNode) arg).getName());
+                boolean equals = type.equals(node.getType());
+                int argNum = node.childNum();
+                if (!match||argNum != argMatchers.size()){
+                    return false;
+                }
+                for (int i = 0; i < argNum; i++) {
+                    Matcher matcher = argMatchers.get(i);
+                    Node node1 = node.getValueIndex().get(i);
+                    if(!matcher.match(node1)){
+                        return false;
+                    }
+                }
+                return  true;
             } else {
                 return false;
             }

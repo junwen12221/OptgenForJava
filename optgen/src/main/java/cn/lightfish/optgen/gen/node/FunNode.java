@@ -2,14 +2,21 @@ package cn.lightfish.optgen.gen.node;
 
 import cn.lightfish.optgen.gen.Node;
 
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class FunNode extends Node {
+public class FunNode extends Node{
     String name;
     String type;
     final List<Node> valueIndex = new ArrayList<>();
+
+    @Override
+    public String toString() {
+        return valueIndex.stream().map(i->i.toString()).collect(Collectors.joining(",",name+"(",")"));
+    }
 
     public FunNode(Node parent, String name, String type) {
         super(parent);
@@ -52,6 +59,11 @@ public class FunNode extends Node {
         } else {
             return childrenStream;
         }
+    }
+
+    @Override
+    public void replace(Node next, Object o) {
+       valueIndex.set( valueIndex.indexOf(next),(Node) o);
     }
 
     public static void main(String[] args) {
