@@ -2,8 +2,9 @@ package cn.lightfish.optgen.gen.node;
 
 import cn.lightfish.optgen.gen.Node;
 
-import java.text.MessageFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -32,12 +33,9 @@ public class FunNode extends Node{
         return name;
     }
 
-
     public String getType() {
         return type;
     }
-
-
 
     public Stream<Node> stream(Order order) {
         return stream((i) -> true, order);

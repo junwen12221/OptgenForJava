@@ -7,12 +7,10 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public abstract class Node{
+    Node parent;
     public void setParent(Node parent) {
         this.parent = parent;
     }
-
-    Node parent;
-
 
     public Node(Node parent) {
         this.parent = parent;
