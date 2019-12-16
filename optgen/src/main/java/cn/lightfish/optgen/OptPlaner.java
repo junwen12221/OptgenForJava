@@ -14,8 +14,13 @@ public class OptPlaner {
         Compiler c = Compiler.createFromText(map);
         c.setFileResolver(s -> map.get(s));
         CompiledExpr complied = c.complie();
+        if (!c.getErrors().isEmpty()){
+            c.getErrors().forEach(i->System.out.println(i));
+        }
         this.rules = complied.getRules();
         this.estimater = new Estimater(estimater);
+
+
 
     }
 
