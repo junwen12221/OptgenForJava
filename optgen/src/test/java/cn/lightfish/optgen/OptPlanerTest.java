@@ -65,31 +65,5 @@ public class OptPlanerTest {
         Node opt = optPlaner.opt(root);
         Assert.assertEquals("root(Join(right(),left()),Join(right(),left()))",opt.toString());
     }
-    @Test
-    public void test3(){
-        String s1 = "[CommuteVar, Normalize]\n" +
-                "(Eq | Ne | Is | IsNot | Plus | Mult | Bitand | Bitor | Bitxor\n" +
-                "    $left:^(Variable)\n" +
-                "    $right:(Variable)\n" +
-                ")\n" +
-                "=>\n" +
-                "((OpName) $right $left)";
-        System.out.println(s1);
 
-        OptPlaner optPlaner = new OptPlaner(Collections.singletonMap("test", s1),Collections.emptyMap());
-        FunNode root = new FunNode(null, "root", "");
-
-        FunNode leftJoin = new FunNode(root, "Join", "");
-        leftJoin.add(new FunNode(leftJoin, "left", ""));
-        leftJoin.add(new FunNode(leftJoin, "right", ""));
-
-        FunNode rightJoin = new FunNode(root, "Join", "");
-        rightJoin.add(new FunNode(leftJoin, "left", ""));
-        rightJoin.add(new FunNode(leftJoin, "right", ""));
-        root.add(leftJoin);
-        root.add(rightJoin);
-
-        Node opt = optPlaner.opt(root);
-        Assert.assertEquals("root(Join(right(),left()),Join(right(),left()))",opt.toString());
-    }
 }
