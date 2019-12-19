@@ -5,12 +5,15 @@ import cn.lightfish.optgen.testutils.TestData;
 import cn.lightfish.optgen.testutils.TestDataReader;
 import lombok.SneakyThrows;
 import org.junit.Assert;
+import sun.applet.Main;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.function.Function;
@@ -21,7 +24,9 @@ public class TestScanner {
     }
     @SneakyThrows
     public static void test() {
-        TestDataReader.runTest("D:\\git\\OptgenForJava\\optgen\\src\\test\\resources\\testdata\\scanner",
+        URL resource = Main. class.getResource("/testdata/scanner");
+        Path dir = Paths.get(resource.toURI());
+        TestDataReader.runTest(dir.toAbsolutePath().toString(),
                 new Function<TestData, String>() {
                     @Override
                     public String apply(TestData testData) {

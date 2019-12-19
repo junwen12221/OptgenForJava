@@ -7,8 +7,16 @@ import cn.lightfish.optgen.gen.PatternVisitor;
 import cn.lightfish.optgen.gen.node.Order;
 
 import java.util.Iterator;
+import java.util.Map;
+import java.util.function.BiFunction;
 
 public class VisitorImpl implements PatternVisitor {
+    final Map<String, BiFunction> customMap;
+
+    public VisitorImpl(Map<String, BiFunction> customMap) {
+        this.customMap = customMap;
+    }
+
     @Override
     public <T> T visit(AndExpr andExpr) {
         return null;
@@ -125,7 +133,7 @@ public class VisitorImpl implements PatternVisitor {
             System.out.println(match);
             Matcher matcher = match.accept(matchVisitor);
 
-            BoundStatementVisitor boundStatementVisitor = new BoundStatementVisitor(matchVisitor);
+            BoundStatementVisitor boundStatementVisitor = new BoundStatementVisitor(matchVisitor,customMap);
 
 
             Expr replace = ruleExpr.getReplace();

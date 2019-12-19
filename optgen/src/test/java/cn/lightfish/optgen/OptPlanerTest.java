@@ -26,7 +26,7 @@ public class OptPlanerTest {
                 "(Join $left:* $right:*) => (Join $right $left)";
         System.out.println(s1);
 
-        OptPlaner optPlaner = new OptPlaner(Collections.singletonMap("test", s1),Collections.emptyMap());
+        OptPlaner optPlaner = new OptPlaner(Collections.singletonMap("test", s1),Collections.emptyMap(),Collections.emptyMap());
         FunNode root = new FunNode(null, "root", "");
 
         FunNode leftJoin = new FunNode(root, "Join", "");
@@ -49,7 +49,7 @@ public class OptPlanerTest {
                 "[CommuteJoin]\n(Join $left:* $right:*) => (Join $right $left)";
         System.out.println(s1);
 
-        OptPlaner optPlaner = new OptPlaner(Collections.singletonMap("test", s1),Collections.emptyMap());
+        OptPlaner optPlaner = new OptPlaner(Collections.singletonMap("test", s1),Collections.emptyMap(),Collections.emptyMap());
         FunNode root = new FunNode(null, "root", "");
 
         FunNode leftJoin = new FunNode(root, "Join", "");

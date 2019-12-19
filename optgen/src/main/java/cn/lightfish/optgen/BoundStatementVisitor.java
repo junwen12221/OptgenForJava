@@ -19,11 +19,11 @@ import java.util.stream.Collectors;
 
 public class BoundStatementVisitor implements PatternVisitor {
     final Map<String,Object> bind ;
-    final Map<String, BiFunction> customMap = new HashMap<>();
+    final Map<String, BiFunction> customMap;
 
-    public BoundStatementVisitor(MatchVisitor matchVisitor) {
-
+    public BoundStatementVisitor(MatchVisitor matchVisitor, Map<String, BiFunction> customMap) {
         this.bind = matchVisitor.bind;
+        this.customMap = customMap;
     }
 
     @Override

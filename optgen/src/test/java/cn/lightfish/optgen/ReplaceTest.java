@@ -22,7 +22,7 @@ public class ReplaceTest {
                 "(Join $left:* $right:*) => (Join $right $left)";
         System.out.println(s1);
 
-        OptPlaner test = new OptPlaner(Collections.singletonMap("test", s1),Collections.emptyMap());
+        OptPlaner test = new OptPlaner(Collections.singletonMap("test", s1),Collections.emptyMap(),Collections.emptyMap());
         Replacer replacer = test.getReplacer();
 
         FunNode root = new FunNode(null, "root", "");

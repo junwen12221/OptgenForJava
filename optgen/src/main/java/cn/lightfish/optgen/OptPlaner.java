@@ -4,13 +4,16 @@ import cn.lightfish.optgen.ast.RuleSetExpr;
 import cn.lightfish.optgen.gen.Node;
 
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class OptPlaner {
     private final RuleSetExpr rules;
     private final Estimater estimater;
+    final Map<String, BiFunction> customMap;
 
-    public OptPlaner(Map<String, String> map, Map<String, Function<double[], Double>> estimater) {
+    public OptPlaner(Map<String, String> map,Map<String, BiFunction> customMap, Map<String, Function<double[], Double>> estimater) {
+        this.customMap = customMap;
         Compiler c = Compiler.createFromText(map);
         c.setFileResolver(s -> map.get(s));
         CompiledExpr complied = c.complie();
@@ -25,7 +28,7 @@ public class OptPlaner {
     }
 
     public Replacer getReplacer() {
-        VisitorImpl visitor = new VisitorImpl();
+        VisitorImpl visitor = new VisitorImpl(customMap);
         return rules.accept(visitor);
     }
 
