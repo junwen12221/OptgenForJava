@@ -4,8 +4,6 @@ import cn.lightfish.optgen.testutils.TestData;
 import cn.lightfish.optgen.testutils.TestDataReader;
 import sun.applet.Main;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;

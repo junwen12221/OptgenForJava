@@ -1,6 +1,6 @@
+
 package cn.lightfish.optgen;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.nio.file.Path;

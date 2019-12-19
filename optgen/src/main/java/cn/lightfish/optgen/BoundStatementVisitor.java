@@ -2,19 +2,16 @@ package cn.lightfish.optgen;
 
 import cn.lightfish.optgen.ast.*;
 import cn.lightfish.optgen.gen.Node;
-import cn.lightfish.optgen.gen.node.FunNode;
-import cn.lightfish.optgen.gen.NodeFactory;
 import cn.lightfish.optgen.gen.PatternVisitor;
+import cn.lightfish.optgen.gen.node.FunNode;
 import cn.lightfish.optgen.gen.node.ListNode;
 import cn.lightfish.optgen.gen.node.NumberNode;
 import cn.lightfish.optgen.gen.node.StringNode;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class BoundStatementVisitor implements PatternVisitor {

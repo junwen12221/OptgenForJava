@@ -3,9 +3,6 @@ package cn.lightfish.optgen;
 import cn.lightfish.optgen.ast.RootExpr;
 import sun.applet.Main;
 
-import java.io.IOException;
-import java.io.StringReader;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,7 +12,6 @@ import java.util.Collections;
 import java.util.List;
 
 import static cn.lightfish.optgen.Parser.createFromText;
-import static org.junit.Assert.*;
 
 public class ParserTest {
     public static void main(String[] args) throws Exception {
